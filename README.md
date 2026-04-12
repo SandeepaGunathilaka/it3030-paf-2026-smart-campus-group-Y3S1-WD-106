@@ -144,7 +144,7 @@ UPLOAD_DIR=./uploads
 
 ```bash
 cd backend
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 Flyway will automatically run all pending migrations on startup. The API will be available at `http://localhost:8080`.

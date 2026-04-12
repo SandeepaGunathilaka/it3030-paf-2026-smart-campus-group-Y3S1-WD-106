@@ -44,7 +44,14 @@ export default function Navbar() {
               <span className="text-white font-bold text-lg">Smart Campus Hub</span>
             </Link>
             <div className="hidden md:flex items-center gap-1">
-              {isAdmin && <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>}
+              {/* {isAdmin && <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>} */}
+               <NavLink to="/dashboard" className={navLinkClass}>Dashboard</NavLink>
+               {(isAdmin || isTechnician) && (
+                <NavLink to="/technician" className={navLinkClass}>Technician</NavLink>
+               )}
+               {isAdmin && (
+                <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
+              )}
             </div>
           </div>
 

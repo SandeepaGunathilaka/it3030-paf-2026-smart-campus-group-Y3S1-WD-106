@@ -20,6 +20,14 @@ export default function OAuthRedirectPage() {
     }
   }, [])
 
+  //start new
+  // useEffect(() => {
+  //   if (!loading && user) {
+  //     navigate('/dashboard', { replace: true })
+  //   }
+  // }, [user, loading])  
+//end new
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-blue-700">
       <div className="text-white text-center">

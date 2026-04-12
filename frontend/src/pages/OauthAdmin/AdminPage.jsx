@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { adminApi } from '../api/adminApi'
-import StatusBadge from '../components/StatusBadge'
+import { adminApi } from '../../api/adminApi'
+import StatusBadge from '../../components/StatusBadge'
 import toast from 'react-hot-toast'
 
 const ROLES = ['USER', 'TECHNICIAN', 'ADMIN']

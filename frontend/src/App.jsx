@@ -1,11 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
-import LoginPage from './pages/LoginPage'
-import OAuthRedirectPage from './pages/OAuthRedirectPage'
-import AdminPage from './pages/AdminPage'
-import NotFoundPage from './pages/NotFoundPage'
-import DashboardPage from './pages/DashboardPage'
+import LoginPage from './pages/OauthAdmin/LoginPage'
+import OAuthRedirectPage from './pages/OauthAdmin/OAuthRedirectPage'
+import AdminPage from './pages/OauthAdmin/AdminPage'
+import NotFoundPage from './pages/OauthAdmin/NotFoundPage'
+import DashboardPage from './pages/OauthAdmin/DashboardPage'
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, loading } = useAuth()

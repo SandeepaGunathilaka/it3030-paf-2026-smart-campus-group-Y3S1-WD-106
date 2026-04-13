@@ -31,18 +31,18 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         User user = userRepository.findByGoogleId(googleId)
                 .orElseGet(() -> userRepository.findByEmail(email)
                         .map(existingUser -> {
-                            existingUser.setGoogleId(googleId);
+                            existingUser.setGoogleId(googleId);   //link Google ID to existing user
                             existingUser.setPictureUrl(picture);
                             existingUser.setName(name);
                             return userRepository.save(existingUser);
                         })
                         .orElseGet(() -> userRepository.save(
                                 User.builder()
-                                        .googleId(googleId)
-                                        .email(email)
-                                        .name(name)
-                                        .pictureUrl(picture)
-                                        .role(Role.USER)
+                                        .googleId(googleId) //get from gooogle
+                                        .email(email)         //from google 'for admn and tech from db''
+                                        .name(name)         //from google 'for admn and tech from db'
+                                        .pictureUrl(picture)    //from google
+                                        .role(Role.USER)        //from db. default USER role
                                         .build()
                         ))
                 );

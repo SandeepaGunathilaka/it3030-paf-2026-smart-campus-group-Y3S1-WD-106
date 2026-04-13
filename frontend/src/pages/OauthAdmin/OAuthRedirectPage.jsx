@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
 export default function OAuthRedirectPage() {
@@ -19,6 +19,14 @@ export default function OAuthRedirectPage() {
       navigate('/login', { replace: true })
     }
   }, [])
+
+  //start new
+  // useEffect(() => {
+  //   if (!loading && user) {
+  //     navigate('/dashboard', { replace: true })
+  //   }
+  // }, [user, loading])  
+//end new
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-blue-700">

@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/resources/**").permitAll()
                 .requestMatchers("/oauth2/authorize/**").permitAll()
                 .requestMatchers("/oauth2/callback/**").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

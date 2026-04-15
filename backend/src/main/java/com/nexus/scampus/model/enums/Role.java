@@ -1,7 +1,8 @@
 package com.nexus.scampus.model.enums;
 
 public enum Role {
-    USER,
+    SUPER_ADMIN,
+    ADMIN,
     TECHNICIAN,
-    ADMIN
+    USER
 }

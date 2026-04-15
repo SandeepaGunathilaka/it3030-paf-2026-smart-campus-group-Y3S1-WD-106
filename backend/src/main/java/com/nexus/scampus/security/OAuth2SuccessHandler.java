@@ -1,5 +1,8 @@
 package com.nexus.scampus.security;
 
+import com.nexus.scampus.model.User;
+import com.nexus.scampus.model.enums.AccountStatus;
+import com.nexus.scampus.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,22 +21,44 @@ import java.io.IOException;
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtTokenProvider tokenProvider;
+    private final UserRepository userRepository;
 
     @Value("${app.oauth2.authorized-redirect-uris}")
     private String redirectUri;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        String token = tokenProvider.generateToken(userPrincipal.getId(), userPrincipal.getEmail());
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
 
-        String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("token", token)
-                .build().toUriString();
+        User user = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new IllegalStateException("User not found after OAuth2 login"));
 
-        log.debug("OAuth2 login success for user: {}", userPrincipal.getEmail());
+        String targetUrl;
+
+        if (user.getStatus() == AccountStatus.PENDING) {
+            // Send to pending page — no JWT issued
+            targetUrl = frontendUrl + "/pending";
+            log.info("OAuth2 login: {} is PENDING approval", user.getEmail());
+
+        } else if (user.getStatus() == AccountStatus.REJECTED) {
+            // Send to rejected page — no JWT issued
+            targetUrl = frontendUrl + "/rejected";
+            log.info("OAuth2 login: {} account is REJECTED", user.getEmail());
+
+        } else {
+            // ACTIVE user — generate JWT and redirect to dashboard
+            String token = tokenProvider.generateToken(user.getId(), user.getEmail());
+            targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
+                    .queryParam("token", token)
+                    .build().toUriString();
+            log.debug("OAuth2 login success for user: {}", user.getEmail());
+        }
+
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 }

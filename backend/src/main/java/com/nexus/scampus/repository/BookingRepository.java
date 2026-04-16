@@ -11,9 +11,7 @@ import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    // ── The conflict-check query ───────────────────────────────────────────────
-    // Finds any PENDING or APPROVED booking for the same resource whose time
-    // range overlaps with the requested [start, end] window.
+    // ── Conflict-check queries ────────────────────────────────────────────────
     // Two ranges overlap when: existingStart < requestedEnd AND existingEnd > requestedStart
     @Query("""
         SELECT b FROM Booking b
@@ -23,13 +21,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
           AND b.endTime   > :startTime
     """)
     List<Booking> findConflictingBookings(
-        @Param("resourceId")     Long resourceId,
-        @Param("startTime")      LocalDateTime startTime,
-        @Param("endTime")        LocalDateTime endTime,
-        @Param("activeStatuses") List<BookingStatus> activeStatuses
+            @Param("resourceId")     Long resourceId,
+            @Param("startTime")      LocalDateTime startTime,
+            @Param("endTime")        LocalDateTime endTime,
+            @Param("activeStatuses") List<BookingStatus> activeStatuses
     );
 
-    // Exclude a specific booking ID — used when checking conflicts on update/cancel
     @Query("""
         SELECT b FROM Booking b
         WHERE b.resourceId = :resourceId
@@ -39,11 +36,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
           AND b.endTime    > :startTime
     """)
     List<Booking> findConflictingBookingsExcluding(
-        @Param("resourceId")     Long resourceId,
-        @Param("excludeId")      Long excludeId,
-        @Param("startTime")      LocalDateTime startTime,
-        @Param("endTime")        LocalDateTime endTime,
-        @Param("activeStatuses") List<BookingStatus> activeStatuses
+            @Param("resourceId")     Long resourceId,
+            @Param("excludeId")      Long excludeId,
+            @Param("startTime")      LocalDateTime startTime,
+            @Param("endTime")        LocalDateTime endTime,
+            @Param("activeStatuses") List<BookingStatus> activeStatuses
     );
 
     // ── User queries ──────────────────────────────────────────────────────────

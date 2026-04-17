@@ -14,12 +14,12 @@ const CampusLogo = () => (
 export default function Navbar() {
   const { user, logout, isAdmin, isTechnician } = useAuth()
   const navigate = useNavigate()
-  const [unreadCount, setUnreadCount]           = useState(0)
+  const [unreadCount, setUnreadCount]             = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const [showUserMenu, setShowUserMenu]           = useState(false)
+  const [scrolled, setScrolled]                   = useState(false)
   const notifRef = useRef(null)
-  const menuRef = useRef(null)
+  const menuRef  = useRef(null)
 
   useEffect(() => {
     fetchUnreadCount()
@@ -36,7 +36,7 @@ export default function Navbar() {
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifications(false)
-      if (menuRef.current && !menuRef.current.contains(e.target)) setShowUserMenu(false)
+      if (menuRef.current  && !menuRef.current.contains(e.target))  setShowUserMenu(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -108,12 +108,22 @@ export default function Navbar() {
             <div className="hidden md:flex items-center gap-1">
               <NavLink to="/dashboard" className={navLinkClass}>Home</NavLink>
               <a onClick={handleSectionLink('about')} className={anchorLinkClass}>About</a>
+
+              {/* ── Booking links (visible to all logged-in users) ── */}
+              <NavLink to="/bookings/my"  className={navLinkClass}>My Bookings</NavLink>
+              <NavLink to="/bookings/new" className={navLinkClass}>New Booking</NavLink>
+
+              {/* ── Role-specific links ── */}
               {(isAdmin || isTechnician) && (
                 <NavLink to="/technician" className={navLinkClass}>Technician</NavLink>
               )}
               {isAdmin && (
-                <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
+                <>
+                  <NavLink to="/bookings/admin" className={navLinkClass}>Booking Mgmt</NavLink>
+                  <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
+                </>
               )}
+
               <a onClick={handleSectionLink('contact')} className={anchorLinkClass}>Contact</a>
             </div>
           </div>

@@ -7,9 +7,9 @@ import NotificationPanel from './NotificationPanel'
 export default function Navbar() {
   const { user, logout, isAdmin, isTechnician } = useAuth()
   const navigate = useNavigate()
-  const [unreadCount, setUnreadCount] = useState(0)
+  const [unreadCount, setUnreadCount]           = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showUserMenu, setShowUserMenu]           = useState(false)
   const notifRef = useRef(null)
 
   useEffect(() => {
@@ -39,23 +39,35 @@ export default function Navbar() {
     <nav className="bg-blue-700 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+
+          {/* Left: logo + nav links */}
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-2">
               <span className="text-white font-bold text-lg">Smart Campus Hub</span>
             </Link>
             <div className="hidden md:flex items-center gap-1">
-              {/* {isAdmin && <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>} */}
-               <NavLink to="/dashboard" className={navLinkClass}>Dashboard</NavLink>
-               {(isAdmin || isTechnician) && (
+              <NavLink to="/dashboard" className={navLinkClass}>Dashboard</NavLink>
+
+              {/* ── Booking links (visible to all logged-in users) ── */}
+              <NavLink to="/bookings/my" className={navLinkClass}>My Bookings</NavLink>
+              <NavLink to="/bookings/new" className={navLinkClass}>New Booking</NavLink>
+
+              {/* ── Role-specific links ── */}
+              {(isAdmin || isTechnician) && (
                 <NavLink to="/technician" className={navLinkClass}>Technician</NavLink>
-               )}
-               {isAdmin && (
-                <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
+              )}
+              {isAdmin && (
+                <>
+                  <NavLink to="/bookings/admin" className={navLinkClass}>Booking Mgmt</NavLink>
+                  <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
+                </>
               )}
             </div>
           </div>
 
+          {/* Right: notifications + user menu */}
           <div className="flex items-center gap-4">
+
             {/* Notification Bell */}
             <div className="relative" ref={notifRef}>
               <button
@@ -87,7 +99,9 @@ export default function Navbar() {
               >
                 {user?.pictureUrl
                   ? <img src={user.pictureUrl} alt="" className="h-8 w-8 rounded-full" />
-                  : <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">{user?.name?.[0]}</div>
+                  : <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                      {user?.name?.[0]}
+                    </div>
                 }
                 <span className="hidden md:block text-sm font-medium">{user?.name}</span>
               </button>
@@ -96,14 +110,20 @@ export default function Navbar() {
                   <div className="px-4 py-2 border-b">
                     <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
-                    <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">{user?.role}</span>
+                    <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                      {user?.role}
+                    </span>
                   </div>
-                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                  >
                     Sign Out
                   </button>
                 </div>
               )}
             </div>
+
           </div>
         </div>
       </div>

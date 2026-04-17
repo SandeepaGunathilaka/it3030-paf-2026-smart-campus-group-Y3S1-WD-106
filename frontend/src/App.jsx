@@ -12,7 +12,16 @@ import NotFoundPage from './pages/OauthAdmin/NotFoundPage'
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth()
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F0F3FA' }}>
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4A6FA5, #395886)' }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 3L3 9.5V20C3 20.6 3.4 21 4 21H8.5V15.5H15.5V21H20C20.6 21 21 20.6 21 20V9.5L12 3Z" /></svg>
+        </div>
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2" style={{ borderColor: '#638ECB' }} />
+      </div>
+    </div>
+  )
   if (!user) return <Navigate to="/login" replace />
   if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" replace />
   return children
@@ -20,7 +29,16 @@ function ProtectedRoute({ children, roles }) {
 
 export default function App() {
   const { user, loading } = useAuth()
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F0F3FA' }}>
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4A6FA5, #395886)' }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 3L3 9.5V20C3 20.6 3.4 21 4 21H8.5V15.5H15.5V21H20C20.6 21 21 20.6 21 20V9.5L12 3Z" /></svg>
+        </div>
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2" style={{ borderColor: '#638ECB' }} />
+      </div>
+    </div>
+  )
 
   return (
     <Routes>

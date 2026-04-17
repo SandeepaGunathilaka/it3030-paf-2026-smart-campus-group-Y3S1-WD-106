@@ -189,7 +189,7 @@ function UsersTab({ isSuperAdmin }) {
 
 // ── Create Staff Tab (Super Admin only) ───────────────────────────────────────
 function CreateStaffTab() {
-  const [form, setForm] = useState({ googleId: '', email: '', name: '', pictureUrl: '', role: 'ADMIN' })
+  const [form, setForm] = useState({ email: '', name: '', pictureUrl: '', role: 'ADMIN' })
   const [saving, setSaving] = useState(false)
 
   const handleChange = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -200,7 +200,7 @@ function CreateStaffTab() {
     try {
       await adminApi.createStaff(form)
       toast.success(`${form.role} account created for ${form.name}`)
-      setForm({ googleId: '', email: '', name: '', pictureUrl: '', role: 'ADMIN' })
+      setForm({ email: '', name: '', pictureUrl: '', role: 'ADMIN' })
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to create account')
     } finally {
@@ -214,13 +214,6 @@ function CreateStaffTab() {
         <h2 className="font-semibold text-gray-900 mb-1">Create Staff Account</h2>
         <p className="text-sm text-gray-500 mb-5">Pre-create an Admin or Technician account. The person must log in with the matching Google account.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Google ID <span className="text-red-500">*</span></label>
-            <input name="googleId" value={form.googleId} onChange={handleChange} required
-              placeholder="e.g. 117263845934..."
-              className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
-            <p className="text-xs text-gray-400 mt-1">Get this from the person's Google account (sub field)</p>
-          </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
             <input name="email" type="email" value={form.email} onChange={handleChange} required
@@ -311,6 +304,7 @@ export default function AdminPage() {
   ]
 
   return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -339,6 +333,7 @@ export default function AdminPage() {
       {activeTab === 'pending'       && <PendingTab onAction={refreshPendingCount} />}
       {activeTab === 'users'         && <UsersTab isSuperAdmin={isSuperAdmin} />}
       {activeTab === 'create-staff'  && isSuperAdmin && <CreateStaffTab />}
+    </div>
     </div>
   )
 }

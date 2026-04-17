@@ -16,12 +16,8 @@ export default function Navbar() {
   const navigate = useNavigate()
   const [unreadCount, setUnreadCount]           = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
-<<<<<<< HEAD
-  const [showUserMenu, setShowUserMenu]           = useState(false)
-=======
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [scrolled, setScrolled] = useState(false)
->>>>>>> dev
   const notifRef = useRef(null)
   const menuRef = useRef(null)
 
@@ -93,11 +89,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
-<<<<<<< HEAD
-          {/* Left: logo + nav links */}
-=======
           {/* ── Brand ── */}
->>>>>>> dev
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-2.5 group">
               <div
@@ -114,42 +106,20 @@ export default function Navbar() {
 
             {/* ── Nav links ── */}
             <div className="hidden md:flex items-center gap-1">
-<<<<<<< HEAD
-              <NavLink to="/dashboard" className={navLinkClass}>Dashboard</NavLink>
-
-              {/* ── Booking links (visible to all logged-in users) ── */}
-              <NavLink to="/bookings/my" className={navLinkClass}>My Bookings</NavLink>
-              <NavLink to="/bookings/new" className={navLinkClass}>New Booking</NavLink>
-
-              {/* ── Role-specific links ── */}
-=======
               <NavLink to="/dashboard" className={navLinkClass}>Home</NavLink>
               <a onClick={handleSectionLink('about')} className={anchorLinkClass}>About</a>
->>>>>>> dev
               {(isAdmin || isTechnician) && (
                 <NavLink to="/technician" className={navLinkClass}>Technician</NavLink>
               )}
               {isAdmin && (
-<<<<<<< HEAD
-                <>
-                  <NavLink to="/bookings/admin" className={navLinkClass}>Booking Mgmt</NavLink>
-                  <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
-                </>
-=======
                 <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
->>>>>>> dev
               )}
               <a onClick={handleSectionLink('contact')} className={anchorLinkClass}>Contact</a>
             </div>
           </div>
 
-<<<<<<< HEAD
-          {/* Right: notifications + user menu */}
-          <div className="flex items-center gap-4">
-=======
           {/* ── Right side ── */}
           <div className="flex items-center gap-2">
->>>>>>> dev
 
             {/* Notification Bell */}
             <div className="relative" ref={notifRef}>
@@ -181,31 +151,6 @@ export default function Navbar() {
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl hover:bg-white/10 transition-all duration-200 focus:outline-none"
               >
-<<<<<<< HEAD
-                {user?.pictureUrl
-                  ? <img src={user.pictureUrl} alt="" className="h-8 w-8 rounded-full" />
-                  : <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                      {user?.name?.[0]}
-                    </div>
-                }
-                <span className="hidden md:block text-sm font-medium">{user?.name}</span>
-              </button>
-              {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 py-1">
-                  <div className="px-4 py-2 border-b">
-                    <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
-                    <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                      {user?.role}
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
-                  >
-                    Sign Out
-                  </button>
-=======
                 {user?.pictureUrl ? (
                   <img src={user.pictureUrl} alt="" className="h-8 w-8 rounded-full ring-2 ring-white/30 object-cover" />
                 ) : (
@@ -261,7 +206,6 @@ export default function Navbar() {
                       Sign Out
                     </button>
                   </div>
->>>>>>> dev
                 </div>
               )}
             </div>

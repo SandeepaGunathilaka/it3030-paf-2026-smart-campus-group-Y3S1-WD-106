@@ -14,12 +14,16 @@ const CampusLogo = () => (
 export default function Navbar() {
   const { user, logout, isAdmin, isTechnician } = useAuth()
   const navigate = useNavigate()
-  const [unreadCount, setUnreadCount] = useState(0)
+  const [unreadCount, setUnreadCount]             = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const [showUserMenu, setShowUserMenu]           = useState(false)
+  const [scrolled, setScrolled]                   = useState(false)
   const notifRef = useRef(null)
-  const menuRef = useRef(null)
+  const menuRef  = useRef(null)
+
+  // True for both ADMIN and SUPER_ADMIN
+  const isSuperOrAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+  const canAccessTechnician = isTechnician || isSuperOrAdmin
 
   useEffect(() => {
     fetchUnreadCount()
@@ -36,7 +40,7 @@ export default function Navbar() {
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifications(false)
-      if (menuRef.current && !menuRef.current.contains(e.target)) setShowUserMenu(false)
+      if (menuRef.current  && !menuRef.current.contains(e.target))  setShowUserMenu(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -108,12 +112,24 @@ export default function Navbar() {
             <div className="hidden md:flex items-center gap-1">
               <NavLink to="/dashboard" className={navLinkClass}>Home</NavLink>
               <a onClick={handleSectionLink('about')} className={anchorLinkClass}>About</a>
-              {(isAdmin || isTechnician) && (
+
+              {/* ── Booking links — all logged-in users ── */}
+              <NavLink to="/bookings/my"  className={navLinkClass}>My Bookings</NavLink>
+              <NavLink to="/bookings/new" className={navLinkClass}>New Booking</NavLink>
+
+              {/* ── Technician — TECHNICIAN, ADMIN, SUPER_ADMIN ── */}
+              {canAccessTechnician && (
                 <NavLink to="/technician" className={navLinkClass}>Technician</NavLink>
               )}
-              {isAdmin && (
-                <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
+
+              {/* ── Admin-level only — ADMIN and SUPER_ADMIN ── */}
+              {isSuperOrAdmin && (
+                <>
+                  <NavLink to="/bookings/admin" className={navLinkClass}>Booking Mgmt</NavLink>
+                  <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
+                </>
               )}
+
               <a onClick={handleSectionLink('contact')} className={anchorLinkClass}>Contact</a>
             </div>
           </div>
@@ -209,6 +225,7 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+
           </div>
         </div>
       </div>

@@ -4,13 +4,16 @@ import Layout from './components/Layout'
 import LoginPage from './pages/OauthAdmin/LoginPage'
 import OAuthRedirectPage from './pages/OauthAdmin/OAuthRedirectPage'
 import AdminPage from './pages/OauthAdmin/AdminPage'
-import NotFoundPage from './pages/OauthAdmin/NotFoundPage'
+import TechnicianPage from './pages/OauthAdmin/TechnicianPage'
 import DashboardPage from './pages/OauthAdmin/DashboardPage'
+import PendingPage from './pages/OauthAdmin/PendingPage'
+import RejectedPage from './pages/OauthAdmin/RejectedPage'
+import NotFoundPage from './pages/OauthAdmin/NotFoundPage'
 import CreateBookingPage from './pages/Booking/CreateBookingPage'
 import MyBookingsPage from './pages/Booking/MyBookingsPage'
 import AdminBookingsPage from './pages/Booking/AdminBookingsPage'
 
-function ProtectedRoute({ children, adminOnly = false }) {
+function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth()
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#F0F3FA' }}>
@@ -23,7 +26,7 @@ function ProtectedRoute({ children, adminOnly = false }) {
     </div>
   )
   if (!user) return <Navigate to="/login" replace />
-  if (adminOnly && user.role !== 'ADMIN') return <Navigate to="/dashboard" replace />
+  if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" replace />
   return children
 }
 
@@ -44,20 +47,35 @@ export default function App() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/oauth2/redirect" element={<OAuthRedirectPage />} />
+      <Route path="/pending"  element={<PendingPage />} />
+      <Route path="/rejected" element={<RejectedPage />} />
 
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
 
-        {/* ── Booking routes ── */}
-        <Route path="bookings/new"   element={<CreateBookingPage />} />
-        <Route path="bookings/my"    element={<MyBookingsPage />} />
+        {/* ── Booking routes (Member 2) ────────────────────────────────── */}
+        {/* Any logged-in user can create and view their own bookings */}
+        <Route path="bookings/new" element={<CreateBookingPage />} />
+        <Route path="bookings/my"  element={<MyBookingsPage />} />
+        {/* Booking management restricted to ADMIN and SUPER_ADMIN */}
         <Route path="bookings/admin" element={
-          <ProtectedRoute adminOnly><AdminBookingsPage /></ProtectedRoute>
+          <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
+            <AdminBookingsPage />
+          </ProtectedRoute>
         } />
 
-        {/* ── Admin ── */}
-        <Route path="admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
+        {/* ── Existing routes (unchanged) ──────────────────────────────── */}
+        <Route path="admin" element={
+          <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
+            <AdminPage />
+          </ProtectedRoute>
+        } />
+        <Route path="technician" element={
+          <ProtectedRoute roles={['TECHNICIAN', 'ADMIN', 'SUPER_ADMIN']}>
+            <TechnicianPage />
+          </ProtectedRoute>
+        } />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

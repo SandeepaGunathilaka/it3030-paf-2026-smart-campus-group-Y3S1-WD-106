@@ -20,8 +20,7 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // We reference resource_id only — Resource entity belongs to Member 1.
-    // Using a simple Long avoids a cross-module JPA coupling issue.
+    // Plain Long to avoid cross-module JPA coupling with Member 1's Resource entity
     @Column(name = "resource_id", nullable = false)
     private Long resourceId;
 

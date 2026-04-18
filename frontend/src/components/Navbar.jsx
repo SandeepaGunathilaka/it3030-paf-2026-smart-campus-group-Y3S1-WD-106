@@ -21,6 +21,10 @@ export default function Navbar() {
   const notifRef = useRef(null)
   const menuRef  = useRef(null)
 
+  // True for both ADMIN and SUPER_ADMIN
+  const isSuperOrAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+  const canAccessTechnician = isTechnician || isSuperOrAdmin
+
   useEffect(() => {
     fetchUnreadCount()
     const interval = setInterval(fetchUnreadCount, 30000)
@@ -109,15 +113,17 @@ export default function Navbar() {
               <NavLink to="/dashboard" className={navLinkClass}>Home</NavLink>
               <a onClick={handleSectionLink('about')} className={anchorLinkClass}>About</a>
 
-              {/* ── Booking links (visible to all logged-in users) ── */}
+              {/* ── Booking links — all logged-in users ── */}
               <NavLink to="/bookings/my"  className={navLinkClass}>My Bookings</NavLink>
               <NavLink to="/bookings/new" className={navLinkClass}>New Booking</NavLink>
 
-              {/* ── Role-specific links ── */}
-              {(isAdmin || isTechnician) && (
+              {/* ── Technician — TECHNICIAN, ADMIN, SUPER_ADMIN ── */}
+              {canAccessTechnician && (
                 <NavLink to="/technician" className={navLinkClass}>Technician</NavLink>
               )}
-              {isAdmin && (
+
+              {/* ── Admin-level only — ADMIN and SUPER_ADMIN ── */}
+              {isSuperOrAdmin && (
                 <>
                   <NavLink to="/bookings/admin" className={navLinkClass}>Booking Mgmt</NavLink>
                   <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>

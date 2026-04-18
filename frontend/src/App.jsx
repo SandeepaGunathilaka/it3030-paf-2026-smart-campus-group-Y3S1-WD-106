@@ -9,6 +9,9 @@ import DashboardPage from './pages/OauthAdmin/DashboardPage'
 import PendingPage from './pages/OauthAdmin/PendingPage'
 import RejectedPage from './pages/OauthAdmin/RejectedPage'
 import NotFoundPage from './pages/OauthAdmin/NotFoundPage'
+import CreateBookingPage from './pages/Booking/CreateBookingPage'
+import MyBookingsPage from './pages/Booking/MyBookingsPage'
+import AdminBookingsPage from './pages/Booking/AdminBookingsPage'
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth()
@@ -46,6 +49,7 @@ export default function App() {
       <Route path="/oauth2/redirect" element={<OAuthRedirectPage />} />
       <Route path="/pending"  element={<PendingPage />} />
       <Route path="/rejected" element={<RejectedPage />} />
+
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
@@ -60,6 +64,7 @@ export default function App() {
           </ProtectedRoute>
         } />
       </Route>
+
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

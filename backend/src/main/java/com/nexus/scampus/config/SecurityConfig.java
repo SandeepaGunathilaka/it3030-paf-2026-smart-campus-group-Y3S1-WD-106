@@ -36,11 +36,18 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // ── Public ─────────────────────────────────────────────────
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/resources/**").permitAll()
                 .requestMatchers("/oauth2/authorize/**").permitAll()
                 .requestMatchers("/oauth2/callback/**").permitAll()
-                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+
+                // ── Admin-only routes ──────────────────────────────────────
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("PATCH", "/api/bookings/*/approve").hasRole("ADMIN")
+                .requestMatchers("PATCH", "/api/bookings/*/reject").hasRole("ADMIN")
+                .requestMatchers("GET",   "/api/bookings").hasRole("ADMIN")
+
+                // ── All other endpoints require login ──────────────────────
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

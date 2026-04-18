@@ -6,6 +6,7 @@ import OAuthRedirectPage from './pages/OauthAdmin/OAuthRedirectPage'
 import AdminPage from './pages/OauthAdmin/AdminPage'
 import TechnicianPage from './pages/OauthAdmin/TechnicianPage'
 import DashboardPage from './pages/OauthAdmin/DashboardPage'
+import ResourceCatalogue from './pages/ResourceCatalogue'
 import PendingPage from './pages/OauthAdmin/PendingPage'
 import RejectedPage from './pages/OauthAdmin/RejectedPage'
 import NotFoundPage from './pages/OauthAdmin/NotFoundPage'
@@ -53,6 +54,7 @@ export default function App() {
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="resource-catalogue" element={<ResourceCatalogue />} />
         <Route path="admin/*" element={
           <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
             <AdminPage />

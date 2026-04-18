@@ -96,6 +96,7 @@ public class BookingService {
 
     // ── Read ──────────────────────────────────────────────────────────────────
 
+    @Transactional(readOnly = true)
     public BookingResponse getBookingById(Long id, UserPrincipal currentUser) {
         Booking booking = getBooking(id);
         boolean isOwner = booking.getUser().getId().equals(currentUser.getId());
@@ -107,22 +108,26 @@ public class BookingService {
         return toResponse(booking);
     }
 
+    @Transactional(readOnly = true)
     public List<BookingResponse> getMyBookings(UserPrincipal currentUser) {
         return bookingRepository
                 .findByUserIdOrderByCreatedAtDesc(currentUser.getId())
                 .stream().map(this::toResponse).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<BookingResponse> getAllBookings() {
         return bookingRepository.findAllByOrderByCreatedAtDesc()
                 .stream().map(this::toResponse).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<BookingResponse> getBookingsByStatus(BookingStatus status) {
         return bookingRepository.findByStatusOrderByCreatedAtDesc(status)
                 .stream().map(this::toResponse).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<BookingResponse> getBookingsByResource(Long resourceId) {
         return bookingRepository.findByResourceIdOrderByCreatedAtDesc(resourceId)
                 .stream().map(this::toResponse).toList();
@@ -140,7 +145,6 @@ public class BookingService {
 
         booking.setStatus(BookingStatus.APPROVED);
         booking.setAdminNote(req.getAdminNote());
-
         Booking saved = bookingRepository.save(booking);
 
         notificationService.send(
@@ -168,7 +172,6 @@ public class BookingService {
 
         booking.setStatus(BookingStatus.REJECTED);
         booking.setAdminNote(req.getAdminNote());
-
         Booking saved = bookingRepository.save(booking);
 
         notificationService.send(

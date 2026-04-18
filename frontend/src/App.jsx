@@ -49,7 +49,7 @@ export default function App() {
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="admin" element={
+        <Route path="admin/*" element={
           <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
             <AdminPage />
           </ProtectedRoute>

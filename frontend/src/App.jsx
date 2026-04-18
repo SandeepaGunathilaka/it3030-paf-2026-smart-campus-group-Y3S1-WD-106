@@ -6,9 +6,13 @@ import OAuthRedirectPage from './pages/OauthAdmin/OAuthRedirectPage'
 import AdminPage from './pages/OauthAdmin/AdminPage'
 import TechnicianPage from './pages/OauthAdmin/TechnicianPage'
 import DashboardPage from './pages/OauthAdmin/DashboardPage'
+import ResourceCatalogue from './pages/ResourceCatalogue'
 import PendingPage from './pages/OauthAdmin/PendingPage'
 import RejectedPage from './pages/OauthAdmin/RejectedPage'
 import NotFoundPage from './pages/OauthAdmin/NotFoundPage'
+import CreateBookingPage from './pages/Booking/CreateBookingPage'
+import MyBookingsPage from './pages/Booking/MyBookingsPage'
+import AdminBookingsPage from './pages/Booking/AdminBookingsPage'
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth()
@@ -46,10 +50,12 @@ export default function App() {
       <Route path="/oauth2/redirect" element={<OAuthRedirectPage />} />
       <Route path="/pending"  element={<PendingPage />} />
       <Route path="/rejected" element={<RejectedPage />} />
+
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="admin" element={
+        <Route path="resource-catalogue" element={<ResourceCatalogue />} />
+        <Route path="admin/*" element={
           <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
             <AdminPage />
           </ProtectedRoute>
@@ -60,6 +66,7 @@ export default function App() {
           </ProtectedRoute>
         } />
       </Route>
+
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

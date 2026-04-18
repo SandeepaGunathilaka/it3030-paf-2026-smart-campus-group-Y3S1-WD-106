@@ -21,6 +21,12 @@
 	</properties>
 
 	<dependencies>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
 		<!-- Web -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -139,6 +145,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>3.3.5</version>
 				<configuration>
 					<jvmArguments>-Xms64m -Xmx256m -XX:+UseSerialGC -XX:TieredStopAtLevel=1</jvmArguments>
 					<excludes>

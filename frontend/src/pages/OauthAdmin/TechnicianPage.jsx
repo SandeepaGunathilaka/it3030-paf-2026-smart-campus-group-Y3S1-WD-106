@@ -1,4 +1,5 @@
-// Technician page — to be implemented by the technician feature member
+import TechnicianTicketsPage from '../Tickets/TechnicianTicketsPage'
+
 export default function TechnicianPage() {
-  return null
+  return <TechnicianTicketsPage />
 }

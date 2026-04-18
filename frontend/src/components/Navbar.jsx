@@ -117,14 +117,18 @@ export default function Navbar() {
               <NavLink to="/bookings/my"  className={navLinkClass}>My Bookings</NavLink>
               <NavLink to="/bookings/new" className={navLinkClass}>New Booking</NavLink>
 
-              {/* ── Technician — TECHNICIAN, ADMIN, SUPER_ADMIN ── */}
-              {canAccessTechnician && (
-                <NavLink to="/technician" className={navLinkClass}>Technician</NavLink>
+              {/* ── Ticket links ── */}
+              <NavLink to="/tickets/my" className={navLinkClass}>My Tickets</NavLink>
+
+              {/* ── Technician ── */}
+              {isTechnician && (
+                <NavLink to="/tickets/technician" className={navLinkClass}>My Assignments</NavLink>
               )}
 
-              {/* ── Admin-level only — ADMIN and SUPER_ADMIN ── */}
+              {/* ── Admin-level only ── */}
               {isSuperOrAdmin && (
                 <>
+                  <NavLink to="/tickets/admin" className={navLinkClass}>Tickets</NavLink>
                   <NavLink to="/bookings/admin" className={navLinkClass}>Booking Mgmt</NavLink>
                   <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
                 </>

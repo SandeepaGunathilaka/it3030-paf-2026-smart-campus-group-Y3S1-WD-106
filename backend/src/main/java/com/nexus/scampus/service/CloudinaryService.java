@@ -3,6 +3,7 @@ package com.nexus.scampus.service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,6 +12,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "cloudinary", name = "cloud-name")
 public class CloudinaryService {
 
     private final Cloudinary cloudinary;

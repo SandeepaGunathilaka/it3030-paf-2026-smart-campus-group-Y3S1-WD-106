@@ -32,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +44,7 @@ public class TicketService {
     private final UserRepository userRepository;
     private final ResourceRepository resourceRepository;
     private final NotificationService notificationService;
-    private final CloudinaryService cloudinaryService;
+    private Optional<CloudinaryService> cloudinaryService;
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -101,11 +102,11 @@ public class TicketService {
         Ticket saved = ticketRepository.save(ticket);
 
         // Upload attachments to Cloudinary
-        if (files != null && !files.isEmpty()) {
+        if (files != null && !files.isEmpty() && cloudinaryService.isPresent()) {
             List<TicketAttachment> attachments = new ArrayList<>();
             for (MultipartFile file : files) {
                 if (!file.isEmpty()) {
-                    String fileUrl = cloudinaryService.uploadFile(file);
+                    String fileUrl = cloudinaryService.get().uploadFile(file);
                     TicketAttachment attachment = TicketAttachment.builder()
                             .ticket(saved)
                             .fileName(file.getOriginalFilename())
@@ -347,8 +348,10 @@ public class TicketService {
         }
 
         // Delete attachments from Cloudinary first
-        ticket.getAttachments().forEach(attachment ->
-                cloudinaryService.deleteFile(attachment.getFileUrl()));
+        if (cloudinaryService.isPresent()) {
+            ticket.getAttachments().forEach(attachment ->
+                    cloudinaryService.get().deleteFile(attachment.getFileUrl()));
+        }
 
         ticketRepository.delete(ticket);
     }

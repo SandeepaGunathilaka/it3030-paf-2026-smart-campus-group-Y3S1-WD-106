@@ -115,7 +115,6 @@ export default function Navbar() {
 
               {/* ── Booking links — all logged-in users ── */}
               <NavLink to="/bookings/my"  className={navLinkClass}>My Bookings</NavLink>
-              <NavLink to="/bookings/new" className={navLinkClass}>New Booking</NavLink>
 
               {/* ── Technician — TECHNICIAN, ADMIN, SUPER_ADMIN ── */}
               {canAccessTechnician && (
@@ -124,10 +123,7 @@ export default function Navbar() {
 
               {/* ── Admin-level only — ADMIN and SUPER_ADMIN ── */}
               {isSuperOrAdmin && (
-                <>
-                  <NavLink to="/bookings/admin" className={navLinkClass}>Booking Mgmt</NavLink>
-                  <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
-                </>
+                <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
               )}
 
               <a onClick={handleSectionLink('contact')} className={anchorLinkClass}>Contact</a>

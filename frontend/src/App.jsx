@@ -55,6 +55,8 @@ export default function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="resource-catalogue" element={<ResourceCatalogue />} />
+        <Route path="bookings/my" element={<MyBookingsPage />} />
+        <Route path="bookings/new" element={<CreateBookingPage />} />
         <Route path="admin/*" element={
           <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
             <AdminPage />

@@ -9,6 +9,16 @@
             "projectName": "scampus-backend",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-ScampusBakendApplication<scampus-bakend>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.nexus.scampus.ScampusBakendApplication",
+            "projectName": "scampus-bakend",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

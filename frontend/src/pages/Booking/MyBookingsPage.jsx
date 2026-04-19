@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import CreateBookingPage from './CreateBookingPage'
 import { bookingApi } from '../../api/bookingApi'
 
 const STATUS_STYLES = {
@@ -24,6 +25,7 @@ export default function MyBookingsPage() {
   const [error, setError]       = useState('')
   const [successMsg, setSuccessMsg] = useState(location.state?.success || '')
   const [cancellingId, setCancellingId] = useState(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
     fetchBookings()
@@ -74,12 +76,12 @@ export default function MyBookingsPage() {
           <h1 className="text-2xl font-bold text-gray-900">My Bookings</h1>
           <p className="text-sm text-gray-500 mt-1">Track the status of your booking requests.</p>
         </div>
-        <Link
-          to="/bookings/new"
+        <button
+          onClick={() => setShowCreateModal(true)}
           className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
         >
           + New Booking
-        </Link>
+        </button>
       </div>
 
       {/* Banners */}
@@ -105,9 +107,9 @@ export default function MyBookingsPage() {
       {!loading && bookings.length === 0 && !error && (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
           <p className="text-gray-400 text-sm mb-3">You have no bookings yet.</p>
-          <Link to="/bookings/new" className="text-blue-600 text-sm font-medium hover:underline">
+          <button onClick={() => setShowCreateModal(true)} className="text-blue-600 text-sm font-medium hover:underline">
             Create your first booking →
-          </Link>
+          </button>
         </div>
       )}
 
@@ -163,6 +165,17 @@ export default function MyBookingsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {showCreateModal && (
+        <CreateBookingPage 
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={(msg) => {
+            setShowCreateModal(false)
+            fetchBookings()
+            setSuccessMsg(msg)
+          }}
+        />
       )}
     </div>
   )

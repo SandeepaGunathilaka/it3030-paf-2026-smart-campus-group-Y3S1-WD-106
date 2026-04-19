@@ -340,7 +340,7 @@ export default function DashboardPage() {
               iconBg="#F0F3FA" iconColor="#638ECB" />
             <FeatureCard d={P.stack} title="Resources"
               desc="Browse all available campus facilities, equipment, and shared resources."
-              iconBg="#B1C9EF" iconColor="#395886" />
+              iconBg="#B1C9EF" iconColor="#395886" link="/resource-catalogue" />
             {(isTechnician || isAdmin) && (
               <FeatureCard d={P.cog1} d2={P.cog2} title="Assigned Tickets"
                 desc="Manage and resolve maintenance tickets assigned to your team."

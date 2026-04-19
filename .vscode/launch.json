@@ -2,11 +2,11 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Spring Boot-ScampusBakendApplication<scampus-bakend>",
+            "name": "Spring Boot-ScampusBakendApplication<scampus-backend>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "mainClass": "com.nexus.scampus.ScampusBakendApplication",
-            "projectName": "scampus-bakend",
+            "projectName": "scampus-backend",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
         }

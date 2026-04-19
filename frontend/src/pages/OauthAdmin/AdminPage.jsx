@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api/adminApi'
 import { useAuth } from '../../context/AuthContext'
 import StatusBadge from '../../components/StatusBadge'
+import ManageResources from './ManageResources'
 import toast from 'react-hot-toast'
 
 const STAFF_ROLES = ['ADMIN', 'TECHNICIAN']
@@ -287,11 +289,32 @@ function OverviewTab({ pendingCount }) {
 // ── Main AdminPage ─────────────────────────────────────────────────────────────
 export default function AdminPage() {
   const { isSuperAdmin } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [pendingCount, setPendingCount] = useState(0)
 
   const refreshPendingCount = () => {
     adminApi.getPending().then(list => setPendingCount(list.length)).catch(() => {})
+  }
+
+  useEffect(() => {
+    if (location.pathname.endsWith('/manage-resources')) {
+      setActiveTab('manage-resources')
+    } else if (activeTab === 'manage-resources') {
+      setActiveTab('overview')
+    }
+  }, [location.pathname, activeTab])
+
+  const handleTabChange = (tabId) => {
+    if (tabId === 'manage-resources') {
+      navigate('/admin/manage-resources')
+      return
+    }
+    if (location.pathname.endsWith('/manage-resources')) {
+      navigate('/admin')
+    }
+    setActiveTab(tabId)
   }
 
   useEffect(() => { refreshPendingCount() }, [])
@@ -300,6 +323,7 @@ export default function AdminPage() {
     { id: 'overview',  label: 'Overview' },
     { id: 'pending',   label: `Pending${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
     { id: 'users',     label: 'Users' },
+    { id: 'manage-resources', label: 'Manage Resources' },
     ...(isSuperAdmin ? [{ id: 'create-staff', label: 'Create Staff' }] : []),
   ]
 
@@ -318,7 +342,7 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200">
         {tabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+          <button key={tab.id} onClick={() => handleTabChange(tab.id)}
             className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === tab.id
                 ? 'text-blue-600 border-b-2 border-blue-600'
@@ -333,6 +357,7 @@ export default function AdminPage() {
       {activeTab === 'pending'       && <PendingTab onAction={refreshPendingCount} />}
       {activeTab === 'users'         && <UsersTab isSuperAdmin={isSuperAdmin} />}
       {activeTab === 'create-staff'  && isSuperAdmin && <CreateStaffTab />}
+      {activeTab === 'manage-resources' && <ManageResources />}
     </div>
     </div>
   )

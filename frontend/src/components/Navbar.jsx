@@ -117,8 +117,10 @@ export default function Navbar() {
               <NavLink to="/bookings/my"  className={navLinkClass}>My Bookings</NavLink>
               <NavLink to="/bookings/new" className={navLinkClass}>New Booking</NavLink>
 
-              {/* ── Ticket links ── */}
-              <NavLink to="/tickets/my" className={navLinkClass}>My Tickets</NavLink>
+              {/* ── Ticket links — only for regular users ── */}
+              {!isSuperOrAdmin && !isTechnician && (
+                <NavLink to="/tickets/my" className={navLinkClass}>My Tickets</NavLink>
+              )}
 
               {/* ── Technician ── */}
               {isTechnician && (

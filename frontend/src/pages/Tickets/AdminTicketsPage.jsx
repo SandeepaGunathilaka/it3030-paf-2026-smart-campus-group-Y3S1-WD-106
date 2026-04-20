@@ -46,7 +46,7 @@ export default function AdminTicketsPage() {
 
   const fetchTechnicians = async () => {
     try {
-      const data = await adminApi.getAllUsers()
+      const data = await adminApi.getUsers()
       setTechnicians(data.filter(u => u.role === 'TECHNICIAN'))
     } catch (err) {
       console.error('Failed to load technicians')

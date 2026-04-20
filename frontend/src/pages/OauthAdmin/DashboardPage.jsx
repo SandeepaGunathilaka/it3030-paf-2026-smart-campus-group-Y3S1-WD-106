@@ -334,7 +334,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <FeatureCard d={P.calendar} title="My Bookings"
               desc="View and manage your facility reservations — rooms, labs, lecture halls, and more."
-              iconBg="#D5DEEF" iconColor="#395886" />
+              iconBg="#D5DEEF" iconColor="#395886" link="/bookings/my" />
             <FeatureCard d={P.ticket} title="My Tickets"
               desc="Track all your maintenance and support requests from submission to resolution."
               iconBg="#F0F3FA" iconColor="#638ECB" />

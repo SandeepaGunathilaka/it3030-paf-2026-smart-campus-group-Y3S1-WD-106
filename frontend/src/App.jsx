@@ -78,6 +78,8 @@ export default function App() {
 
 
 
+        <Route path="bookings/my" element={<MyBookingsPage />} />
+        <Route path="bookings/new" element={<CreateBookingPage />} />
         <Route path="admin/*" element={
           <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
             <AdminPage />

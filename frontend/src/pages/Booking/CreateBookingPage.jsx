@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { bookingApi } from '../../api/bookingApi'
 
-export default function CreateBookingPage() {
-  const navigate = useNavigate()
+export default function CreateBookingPage({ onClose, onSuccess }) {
 
   const [form, setForm] = useState({
     resourceId: '',
@@ -52,7 +50,7 @@ export default function CreateBookingPage() {
         purpose: form.purpose,
         expectedAttendees: form.expectedAttendees ? Number(form.expectedAttendees) : null,
       })
-      navigate('/bookings/my', { state: { success: 'Booking request submitted successfully!' } })
+      if (onSuccess) onSuccess('Booking request submitted successfully!')
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create booking. Please try again.')
     } finally {
@@ -61,19 +59,29 @@ export default function CreateBookingPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+      {/* Blurred background */}
+      <div 
+        className="absolute inset-0 bg-[#0f172a]/40 backdrop-blur-md transition-opacity"
+        onClick={onClose}
+      ></div>
 
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">New Booking Request</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Fill in the details below. Your request will be reviewed by an admin.
-        </p>
-      </div>
-
-      {/* Form card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Modal content */}
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto w-[calc(100vw-2rem)] sm:w-auto">
+        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 sticky top-0 z-10 hidden sm:block">
+          <h2 className="text-xl font-bold text-gray-900">New Booking Request</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Fill in the details below. Your request will be reviewed by an admin.
+          </p>
+        </div>
+        <div className="p-6">
+          <div className="sm:hidden mb-5">
+            <h2 className="text-xl font-bold text-gray-900">New Booking Request</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Fill in the details below. Your request will be reviewed by an admin.
+            </p>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Error banner */}
           {error && (
@@ -165,10 +173,10 @@ export default function CreateBookingPage() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
             <button
               type="button"
-              onClick={() => navigate('/bookings/my')}
+              onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancel
@@ -183,6 +191,7 @@ export default function CreateBookingPage() {
           </div>
 
         </form>
+        </div>
       </div>
     </div>
   )

@@ -115,7 +115,6 @@ export default function Navbar() {
 
               {/* ── Booking links — all logged-in users ── */}
               <NavLink to="/bookings/my"  className={navLinkClass}>My Bookings</NavLink>
-              <NavLink to="/bookings/new" className={navLinkClass}>New Booking</NavLink>
 
               {/* ── Ticket links — only for regular users ── */}
               {!isSuperOrAdmin && !isTechnician && (
@@ -134,6 +133,7 @@ export default function Navbar() {
                   <NavLink to="/bookings/admin" className={navLinkClass}>Booking Mgmt</NavLink>
                   <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
                 </>
+                <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
               )}
 
               <a onClick={handleSectionLink('contact')} className={anchorLinkClass}>Contact</a>

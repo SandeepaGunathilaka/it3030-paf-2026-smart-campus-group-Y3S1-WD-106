@@ -4,6 +4,7 @@ import { adminApi } from '../../api/adminApi'
 import { useAuth } from '../../context/AuthContext'
 import StatusBadge from '../../components/StatusBadge'
 import ManageResources from './ManageResources'
+import AdminBookingsPage from '../Booking/AdminBookingsPage'
 import toast from 'react-hot-toast'
 
 const STAFF_ROLES = ['ADMIN', 'TECHNICIAN']
@@ -301,7 +302,9 @@ export default function AdminPage() {
   useEffect(() => {
     if (location.pathname.endsWith('/manage-resources')) {
       setActiveTab('manage-resources')
-    } else if (activeTab === 'manage-resources') {
+    } else if (location.pathname.endsWith('/manage-bookings')) {
+      setActiveTab('manage-bookings')
+    } else if (activeTab === 'manage-resources' || activeTab === 'manage-bookings') {
       setActiveTab('overview')
     }
   }, [location.pathname, activeTab])
@@ -311,7 +314,11 @@ export default function AdminPage() {
       navigate('/admin/manage-resources')
       return
     }
-    if (location.pathname.endsWith('/manage-resources')) {
+    if (tabId === 'manage-bookings') {
+      navigate('/admin/manage-bookings')
+      return
+    }
+    if (location.pathname.endsWith('/manage-resources') || location.pathname.endsWith('/manage-bookings')) {
       navigate('/admin')
     }
     setActiveTab(tabId)
@@ -324,6 +331,7 @@ export default function AdminPage() {
     { id: 'pending',   label: `Pending${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
     { id: 'users',     label: 'Users' },
     { id: 'manage-resources', label: 'Manage Resources' },
+    { id: 'manage-bookings', label: 'Manage Bookings' },
     ...(isSuperAdmin ? [{ id: 'create-staff', label: 'Create Staff' }] : []),
   ]
 
@@ -358,6 +366,7 @@ export default function AdminPage() {
       {activeTab === 'users'         && <UsersTab isSuperAdmin={isSuperAdmin} />}
       {activeTab === 'create-staff'  && isSuperAdmin && <CreateStaffTab />}
       {activeTab === 'manage-resources' && <ManageResources />}
+      {activeTab === 'manage-bookings' && <div className="-mx-4 -my-4 sm:-mx-6 lg:-mx-8"><AdminBookingsPage /></div>}
     </div>
     </div>
   )

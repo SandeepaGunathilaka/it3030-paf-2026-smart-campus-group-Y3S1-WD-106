@@ -13,6 +13,11 @@ import NotFoundPage from './pages/OauthAdmin/NotFoundPage'
 import CreateBookingPage from './pages/Booking/CreateBookingPage'
 import MyBookingsPage from './pages/Booking/MyBookingsPage'
 import AdminBookingsPage from './pages/Booking/AdminBookingsPage'
+import CreateTicketPage from './pages/Tickets/CreateTicketPage'
+import MyTicketsPage from './pages/Tickets/MyTicketsPage'
+import TicketDetailPage from './pages/Tickets/TicketDetailPage'
+import AdminTicketsPage from './pages/Tickets/AdminTicketsPage'
+import TechnicianTicketsPage from './pages/Tickets/TechnicianTicketsPage'
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth()
@@ -55,6 +60,24 @@ export default function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="resource-catalogue" element={<ResourceCatalogue />} />
+
+        <Route path="tickets/create" element={<CreateTicketPage />} />
+        <Route path="tickets/my" element={<MyTicketsPage />} />
+        <Route path="tickets/:id" element={<TicketDetailPage />} />
+        <Route path="tickets/admin" element={
+          <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
+            <AdminTicketsPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="tickets/technician" element={
+          <ProtectedRoute roles={['TECHNICIAN', 'ADMIN', 'SUPER_ADMIN']}>
+            <TechnicianTicketsPage />
+          </ProtectedRoute>
+        } />
+
+
+
         <Route path="bookings/my" element={<MyBookingsPage />} />
         <Route path="bookings/new" element={<CreateBookingPage />} />
         <Route path="admin/*" element={

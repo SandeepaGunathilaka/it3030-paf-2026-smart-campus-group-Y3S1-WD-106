@@ -133,7 +133,7 @@ export default function Navbar() {
                   <NavLink to="/bookings/admin" className={navLinkClass}>Booking Mgmt</NavLink>
                   <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
                 </>
-                <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
+                
               )}
 
               <a onClick={handleSectionLink('contact')} className={anchorLinkClass}>Contact</a>

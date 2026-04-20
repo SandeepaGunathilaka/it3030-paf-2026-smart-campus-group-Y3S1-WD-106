@@ -52,9 +52,15 @@ public class GlobalExceptionHandler {
             String message = error.getDefaultMessage();
             fieldErrors.put(fieldName, message);
         });
+        
+        String firstErrorMessage = ex.getBindingResult().getAllErrors().isEmpty() 
+            ? "Validation Failed" 
+            : ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+
         Map<String, Object> response = new HashMap<>();
         response.put("status", 400);
         response.put("error", "Validation Failed");
+        response.put("message", firstErrorMessage);
         response.put("fieldErrors", fieldErrors);
         response.put("timestamp", LocalDateTime.now());
         return ResponseEntity.badRequest().body(response);

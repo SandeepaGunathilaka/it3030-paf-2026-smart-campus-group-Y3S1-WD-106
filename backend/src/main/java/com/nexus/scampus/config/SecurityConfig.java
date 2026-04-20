@@ -4,6 +4,7 @@ import com.nexus.scampus.security.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -43,9 +44,9 @@ public class SecurityConfig {
 
                 // ── Admin-only routes ──────────────────────────────────────
                 .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                .requestMatchers("PATCH", "/api/bookings/*/approve").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                .requestMatchers("PATCH", "/api/bookings/*/reject").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                .requestMatchers("GET",   "/api/bookings").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/bookings/*/approve").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/bookings/*/reject").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers(HttpMethod.GET,   "/api/bookings").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                 // ── All other endpoints require login ──────────────────────
                 .anyRequest().authenticated()

@@ -68,9 +68,15 @@ export default function CreateBookingPage({ onClose, onSuccess }) {
 
       {/* Modal content */}
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto w-[calc(100vw-2rem)] sm:w-auto">
-        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 sticky top-0 z-10 hidden sm:block">
-          <h2 className="text-xl font-bold text-gray-900">New Booking Request</h2>
-          <p className="text-sm text-gray-500 mt-1">
+        <div 
+          className="px-6 py-5 border-b border-gray-100 sticky top-0 z-10 hidden sm:block"
+          style={{
+            background: 'linear-gradient(135deg, #4A6FA5 0%, #395886 100%)',
+            borderRadius: '16px 16px 0 0',
+          }}
+        >
+          <h2 className="text-xl font-bold text-white">New Booking Request</h2>
+          <p className="text-sm text-gray-200 mt-1">
             Fill in the details below. Your request will be reviewed by an admin.
           </p>
         </div>
@@ -136,6 +142,25 @@ export default function CreateBookingPage({ onClose, onSuccess }) {
               />
             </div>
           </div>
+
+          {/* Duration Calculator */}
+          {(() => {
+            const duration = form.startTime && form.endTime
+              ? (() => {
+                  const diff = new Date(form.endTime) - new Date(form.startTime)
+                  if (diff <= 0) return null
+                  const h = Math.floor(diff / 3600000)
+                  const m = Math.floor((diff % 3600000) / 60000)
+                  return `${h > 0 ? h + 'h ' : ''}${m}min duration`
+                })()
+              : null
+            
+            return duration ? (
+              <p className="text-xs font-medium text-center" style={{ color: '#638ECB' }}>
+                ⏱ {duration}
+              </p>
+            ) : null
+          })()}
 
           {/* Purpose */}
           <div>

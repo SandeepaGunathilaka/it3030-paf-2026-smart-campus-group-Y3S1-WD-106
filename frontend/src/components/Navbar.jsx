@@ -130,7 +130,6 @@ export default function Navbar() {
               {isSuperOrAdmin && (
                 <>
                   <NavLink to="/tickets/admin" className={navLinkClass}>Tickets</NavLink>
-                  <NavLink to="/bookings/admin" className={navLinkClass}>Booking Mgmt</NavLink>
                   <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
                 </>
                 

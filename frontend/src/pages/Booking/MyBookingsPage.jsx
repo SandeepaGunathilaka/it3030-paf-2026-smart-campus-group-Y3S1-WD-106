@@ -4,10 +4,10 @@ import CreateBookingPage from './CreateBookingPage'
 import { bookingApi } from '../../api/bookingApi'
 
 const STATUS_STYLES = {
-  PENDING:   'bg-yellow-100 text-yellow-800',
-  APPROVED:  'bg-green-100  text-green-800',
-  REJECTED:  'bg-red-100    text-red-800',
-  CANCELLED: 'bg-gray-100   text-gray-600',
+  PENDING:   { bg: '#FFF8E7', color: '#B45309', border: '#FDE68A' },
+  APPROVED:  { bg: '#F0F3FA', color: '#395886', border: '#B1C9EF' },
+  REJECTED:  { bg: '#FEF2F2', color: '#991B1B', border: '#FECACA' },
+  CANCELLED: { bg: '#F9FAFB', color: '#6B7280', border: '#E5E7EB' },
 }
 
 function formatDateTime(iso) {
@@ -25,6 +25,7 @@ export default function MyBookingsPage() {
   const [error, setError]       = useState('')
   const [successMsg, setSuccessMsg] = useState(location.state?.success || '')
   const [cancellingId, setCancellingId] = useState(null)
+  const [confirmCancelId, setConfirmCancelId] = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
@@ -52,11 +53,11 @@ export default function MyBookingsPage() {
   }
 
   const handleCancel = async (id) => {
-    if (!window.confirm('Are you sure you want to cancel this booking?')) return
     setCancellingId(id)
     try {
       await bookingApi.cancelBooking(id)
       setSuccessMsg('Booking cancelled successfully.')
+      setConfirmCancelId(null)
       fetchBookings()
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to cancel booking.')
@@ -66,6 +67,12 @@ export default function MyBookingsPage() {
   }
 
   const canCancel = (status) => status === 'PENDING' || status === 'APPROVED'
+
+  // Summary counts
+  const counts = bookings.reduce((acc, b) => {
+    acc[b.status] = (acc[b.status] || 0) + 1
+    return acc
+  }, {})
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
@@ -82,6 +89,16 @@ export default function MyBookingsPage() {
         >
           + New Booking
         </button>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        {['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'].map(s => (
+          <div key={s} className="bg-white rounded-lg border border-gray-200 p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">{s}</p>
+            <p className="text-2xl font-semibold mt-1" style={{ color: '#395886' }}>{counts[s] || 0}</p>
+          </div>
+        ))}
       </div>
 
       {/* Banners */}
@@ -105,10 +122,20 @@ export default function MyBookingsPage() {
 
       {/* Empty state */}
       {!loading && bookings.length === 0 && !error && (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <p className="text-gray-400 text-sm mb-3">You have no bookings yet.</p>
-          <button onClick={() => setShowCreateModal(true)} className="text-blue-600 text-sm font-medium hover:underline">
-            Create your first booking →
+        <div className="text-center py-16 bg-white rounded-2xl" style={{ border: '1.5px solid #D5DEEF' }}>
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+               style={{ background: '#F0F3FA' }}>
+            <svg className="w-8 h-8" style={{ color: '#638ECB' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <p className="text-gray-500 text-sm font-medium mb-1">No bookings yet</p>
+          <p className="text-gray-400 text-xs mb-4">Create your first booking to get started</p>
+          <button onClick={() => setShowCreateModal(true)}
+            className="text-sm font-semibold px-4 py-2 rounded-xl text-white"
+            style={{ background: 'linear-gradient(135deg, #4A6FA5, #395886)' }}>
+            + New Booking
           </button>
         </div>
       )}
@@ -119,7 +146,8 @@ export default function MyBookingsPage() {
           {bookings.map(booking => (
             <div
               key={booking.id}
-              className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+              className="bg-white rounded-2xl border p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+              style={{ borderColor: '#D5DEEF' }}
             >
               {/* Left: info */}
               <div className="flex-1 min-w-0">
@@ -127,7 +155,14 @@ export default function MyBookingsPage() {
                   <span className="text-sm font-semibold text-gray-900">
                     Resource #{booking.resourceId}
                   </span>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_STYLES[booking.status]}`}>
+                  <span 
+                    className="text-xs font-medium px-2 py-0.5 rounded-full"
+                    style={{
+                      background: STATUS_STYLES[booking.status].bg,
+                      color: STATUS_STYLES[booking.status].color,
+                      border: `1px solid ${STATUS_STYLES[booking.status].border}`
+                    }}
+                  >
                     {booking.status}
                   </span>
                 </div>
@@ -153,13 +188,32 @@ export default function MyBookingsPage() {
                   {formatDateTime(booking.createdAt).split(',')[0]}
                 </span>
                 {canCancel(booking.status) && (
-                  <button
-                    onClick={() => handleCancel(booking.id)}
-                    disabled={cancellingId === booking.id}
-                    className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
-                  >
-                    {cancellingId === booking.id ? 'Cancelling...' : 'Cancel'}
-                  </button>
+                  confirmCancelId === booking.id ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-600 font-medium">Are you sure?</span>
+                      <button
+                        onClick={() => handleCancel(booking.id)}
+                        disabled={cancellingId === booking.id}
+                        className="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setConfirmCancelId(null)}
+                        disabled={cancellingId === booking.id}
+                        className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmCancelId(booking.id)}
+                      className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  )
                 )}
               </div>
             </div>

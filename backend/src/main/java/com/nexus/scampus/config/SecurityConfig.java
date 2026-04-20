@@ -42,10 +42,10 @@ public class SecurityConfig {
                 .requestMatchers("/oauth2/callback/**").permitAll()
 
                 // ── Admin-only routes ──────────────────────────────────────
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("PATCH", "/api/bookings/*/approve").hasRole("ADMIN")
-                .requestMatchers("PATCH", "/api/bookings/*/reject").hasRole("ADMIN")
-                .requestMatchers("GET",   "/api/bookings").hasRole("ADMIN")
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("PATCH", "/api/bookings/*/approve").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("PATCH", "/api/bookings/*/reject").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("GET",   "/api/bookings").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                 // ── All other endpoints require login ──────────────────────
                 .anyRequest().authenticated()

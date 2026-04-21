@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import ResourceTable from '../components/ResourceTable'
+import CreateBookingPage from './Booking/CreateBookingPage'
 import { getAllResources } from '../services/resourceService'
 
 // Icon map per resource type
@@ -170,11 +172,13 @@ function EmptyState({ hasFilters, onClear }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function ResourceCatalogue() {
-  const [resources, setResources] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [typeFilter, setTypeFilter] = useState('All')
+  const [resources, setResources]           = useState([])
+  const [loading, setLoading]               = useState(true)
+  const [error, setError]                   = useState('')
+  const [searchTerm, setSearchTerm]         = useState('')
+  const [typeFilter, setTypeFilter]         = useState('All')
+  const [bookingResourceId, setBookingResourceId] = useState(null)
+  const [successMsg, setSuccessMsg]         = useState('')
 
   useEffect(() => {
     const fetchResources = async () => {
@@ -191,6 +195,13 @@ export default function ResourceCatalogue() {
     }
     fetchResources()
   }, [])
+
+  // Auto-clear success banner after 4 seconds
+  useEffect(() => {
+    if (!successMsg) return
+    const t = setTimeout(() => setSuccessMsg(''), 4000)
+    return () => clearTimeout(t)
+  }, [successMsg])
 
   const activeResources = useMemo(
     () => resources.filter((r) => r.status === 'ACTIVE'),
@@ -242,115 +253,104 @@ export default function ResourceCatalogue() {
   }), [resources, activeResources])
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10">
+    <div className="min-h-screen py-10" style={{ background: '#F0F3FA' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* ── Page header ── */}
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">Resource Catalogue</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Browse and book campus facilities and equipment available for reservation.
+          <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] mb-2" style={{ color: '#638ECB' }}>
+            <span style={{ width: 22, height: 2, background: '#638ECB', display: 'inline-block', borderRadius: 2 }} />
+            Facilities
           </p>
-
-          {/* Summary pills */}
-          {!loading && !error && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full bg-white border border-slate-200 px-3 py-1 text-xs text-slate-600">
-                <strong className="text-slate-900">{stats.total}</strong> total resources
-              </span>
-              <span className="rounded-full bg-emerald-50 border border-emerald-100 px-3 py-1 text-xs text-emerald-700">
-                <strong>{stats.active}</strong> active
-              </span>
-              {stats.outOfService > 0 && (
-                <span className="rounded-full bg-red-50 border border-red-100 px-3 py-1 text-xs text-red-600">
-                  <strong>{stats.outOfService}</strong> out of service
-                </span>
-              )}
-            </div>
-          )}
+          <h1 className="text-3xl font-extrabold" style={{ color: '#0F172A' }}>Resource Catalogue</h1>
+          <p className="mt-1 text-sm" style={{ color: '#64748B' }}>
+            Browse active campus resources and book directly.
+          </p>
         </div>
 
-        {/* ── Search bar ── */}
-        <div className="relative mb-4">
-          <svg
-            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+        {/* Success banner */}
+        {successMsg && (
+          <div className="mb-4 rounded-xl px-4 py-3 text-sm font-medium"
+            style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D' }}>
+            {successMsg}
+          </div>
+        )}
+
+        {/* Search + Filter */}
+        <div className="mb-6 grid gap-4 md:grid-cols-[1fr_auto] lg:grid-cols-[minmax(0,1fr)_220px_220px]">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name or location…"
-            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+            placeholder="Search resources by name…"
+            className="w-full rounded-2xl bg-white px-4 py-3 text-sm shadow-sm outline-none transition"
+            style={{ border: '1.5px solid #D5DEEF', color: '#0F172A' }}
+            onFocus={e => e.target.style.borderColor = '#638ECB'}
+            onBlur={e => e.target.style.borderColor = '#D5DEEF'}
           />
-          {searchTerm && (
-            <button
-              type="button"
-              onClick={() => setSearchTerm('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-            >
-              ✕
-            </button>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="w-full rounded-2xl bg-white px-4 py-3 text-sm shadow-sm outline-none transition"
+            style={{ border: '1.5px solid #D5DEEF', color: '#0F172A' }}
+            onFocus={e => e.target.style.borderColor = '#638ECB'}
+            onBlur={e => e.target.style.borderColor = '#D5DEEF'}
+          >
+            <option value="All">All types</option>
+            {types.map((type) => (
+              <option key={type} value={type}>{type.replace(/_/g, ' ')}</option>
+            ))}
+          </div>
+        )}
+
+        {/* Table card */}
+        <div
+          className="overflow-hidden bg-white shadow-sm"
+          style={{ borderRadius: 28, border: '1.5px solid #D5DEEF' }}
+        >
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: '#395886' }} />
+            </div>
+          ) : error ? (
+            <div className="p-8 text-center text-sm font-medium" style={{ color: '#991B1B' }}>{error}</div>
+          ) : activeResources.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: '#F0F3FA' }}>
+                <svg className="w-7 h-7" style={{ color: '#638ECB' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium" style={{ color: '#64748B' }}>No active resources available.</p>
+            </div>
+          ) : filteredResources.length === 0 ? (
+            <div className="p-8 text-center text-sm font-medium" style={{ color: '#64748B' }}>
+              No resources match your search or filter.
+            </div>
+          ) : (
+            <div className="p-6">
+              <ResourceTable
+                resources={filteredResources}
+                onBook={(id) => setBookingResourceId(id)}
+              />
+            </div>
           )}
         </div>
 
-        {/* ── Type filter chips ── */}
-        {!loading && types.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-2">
-            <TypeChip
-              value="All"
-              active={typeFilter === 'All'}
-              count={typeCounts['All']}
-              onClick={() => setTypeFilter('All')}
-            />
-            {types.map((type) => (
-              <TypeChip
-                key={type}
-                value={type}
-                active={typeFilter === type}
-                count={typeCounts[type] || 0}
-                onClick={() => setTypeFilter(type)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* ── Results count ── */}
-        {!loading && !error && filteredResources.length > 0 && (
-          <p className="mb-4 text-xs text-slate-400 font-medium">
-            Showing {filteredResources.length} resource{filteredResources.length !== 1 ? 's' : ''}
-            {hasFilters && ' · '}
-            {hasFilters && (
-              <button type="button" onClick={clearFilters} className="text-blue-500 hover:underline">
-                Clear filters
-              </button>
-            )}
-          </p>
-        )}
-
-        {/* ── Content ── */}
-        {error ? (
-          <div className="rounded-2xl border border-red-100 bg-red-50 px-6 py-5 text-sm text-red-700">
-            ⚠️ {error}
-          </div>
-        ) : loading ? (
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
-          </div>
-        ) : filteredResources.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white">
-            <EmptyState hasFilters={hasFilters} onClear={clearFilters} />
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {filteredResources.map((resource) => (
-              <ResourceCard key={resource.id} resource={resource} />
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Booking modal — opens pre-filled when Book Now is clicked */}
+      {bookingResourceId !== null && (
+        <CreateBookingPage
+          prefillResourceId={bookingResourceId}
+          onClose={() => setBookingResourceId(null)}
+          onSuccess={(msg) => {
+            setBookingResourceId(null)
+            setSuccessMsg(msg)
+          }}
+        />
+      )}
     </div>
   )
 }

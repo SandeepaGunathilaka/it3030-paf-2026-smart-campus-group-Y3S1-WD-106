@@ -15,11 +15,12 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
+    // Injects the UserRepository to fetch user details for the authenticated user.
     private final UserRepository userRepository;
 
-    /**
-     * GET /api/auth/me — returns the currently authenticated user's profile.
-     */
+    
+    // GET /api/auth/me — returns the currently authenticated user's profile.
+    
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
         User user = userRepository.findById(principal.getId())

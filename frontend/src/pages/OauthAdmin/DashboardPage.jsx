@@ -533,10 +533,19 @@ export default function DashboardPage() {
             <div>
               <h4 className="text-white font-bold text-xs uppercase tracking-[0.16em] mb-5">Services</h4>
               <ul className="space-y-3">
-                {['Facility Booking', 'Support Tickets', 'Campus Resources', 'Maintenance', 'Administration'].map(s => (
-                  <li key={s} className="flex items-center gap-2 text-sm" style={{ color: '#B1C9EF' }}>
+                {[
+                  { label: 'Facility Booking',  path: '/bookings/my' },
+                  { label: 'Support Tickets',   path: null },
+                  { label: 'Campus Resources',  path: null },
+                  { label: 'Maintenance',       path: null },
+                  { label: 'Administration',    path: null },
+                ].map(s => (
+                  <li key={s.label} className="flex items-center gap-2 text-sm">
                     <span style={{ width: 14, height: 1.5, background: '#8AAEE0', display: 'inline-block', borderRadius: 2 }} />
-                    {s}
+                    {s.path
+                      ? <Link to={s.path} className="hover:text-white transition-colors" style={{ color: '#B1C9EF' }}>{s.label}</Link>
+                      : <span style={{ color: '#B1C9EF' }}>{s.label}</span>
+                    }
                   </li>
                 ))}
               </ul>

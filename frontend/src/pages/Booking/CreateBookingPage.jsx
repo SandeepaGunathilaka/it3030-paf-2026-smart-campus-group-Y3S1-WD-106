@@ -209,7 +209,8 @@ export default function CreateBookingPage({ onClose, onSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-5 py-2 text-sm font-semibold text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #4A6FA5, #395886)' }}
             >
               {loading ? 'Submitting...' : 'Submit Request'}
             </button>

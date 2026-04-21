@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
+// provides database access methods for the Notification entity, allowing retrieval of notifications for a user, counting unread notifications, and marking notifications as read.
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 

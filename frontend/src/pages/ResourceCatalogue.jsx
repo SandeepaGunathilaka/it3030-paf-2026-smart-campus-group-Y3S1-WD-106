@@ -1,108 +1,170 @@
 import { useEffect, useMemo, useState } from 'react'
-import ResourceTable from '../components/ResourceTable'
 import CreateBookingPage from './Booking/CreateBookingPage'
 import { getAllResources } from '../services/resourceService'
 
-// Icon map per resource type
-const TYPE_ICONS = {
-  LECTURE_HALL: '🏛️',
-  LAB: '🔬',
-  MEETING_ROOM: '🤝',
-  EQUIPMENT: '📽️',
+// ─── Design-system constants (matches project palette) ────────────────────────
+const BRAND = {
+  primary:   '#395886',
+  accent:    '#638ECB',
+  light:     '#B1C9EF',
+  bg:        '#F0F3FA',
+  border:    '#D5DEEF',
+  text:      '#0F172A',
+  muted:     '#64748B',
 }
 
-const TYPE_LABELS = {
-  LECTURE_HALL: 'Lecture Hall',
-  LAB: 'Lab',
-  MEETING_ROOM: 'Meeting Room',
-  EQUIPMENT: 'Equipment',
+// ─── Type metadata ────────────────────────────────────────────────────────────
+const TYPE_META = {
+  LECTURE_HALL: { label: 'Lecture Hall',   icon: '🏛️', bg: '#EFF6FF', dot: '#3B82F6' },
+  LAB:          { label: 'Lab',            icon: '🔬', bg: '#F0FDF4', dot: '#22C55E' },
+  MEETING_ROOM: { label: 'Meeting Room',   icon: '🤝', bg: '#FFFBEB', dot: '#F59E0B' },
+  EQUIPMENT:    { label: 'Equipment',      icon: '📽️', bg: '#F5F3FF', dot: '#8B5CF6' },
 }
+const DEFAULT_TYPE = { label: 'Resource', icon: '📦', bg: BRAND.bg, dot: BRAND.accent }
 
-const TYPE_THUMB_CLASS = {
-  LECTURE_HALL: 'bg-blue-50',
-  LAB: 'bg-green-50',
-  MEETING_ROOM: 'bg-amber-50',
-  EQUIPMENT: 'bg-violet-50',
-}
-
-// ── Skeleton card shown while loading ────────────────────────────────────────
+// ─── Skeleton card ────────────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden animate-pulse">
-      <div className="h-[88px] bg-slate-100" />
+    <div className="rounded-2xl bg-white overflow-hidden animate-pulse" style={{ border: `1px solid ${BRAND.border}` }}>
+      <div className="h-[88px]" style={{ background: BRAND.bg }} />
       <div className="p-4 space-y-3">
-        <div className="h-3.5 bg-slate-100 rounded w-3/4" />
-        <div className="h-3 bg-slate-100 rounded w-1/2" />
-        <div className="h-3 bg-slate-100 rounded w-2/5" />
-        <div className="flex items-center justify-between pt-1">
-          <div className="h-5 bg-slate-100 rounded-full w-16" />
-          <div className="h-7 bg-slate-100 rounded-lg w-14" />
+        <div className="h-2.5 rounded w-1/3" style={{ background: BRAND.border }} />
+        <div className="h-3.5 rounded w-3/4" style={{ background: BRAND.border }} />
+        <div className="h-3 rounded w-1/2"   style={{ background: BRAND.border }} />
+        <div className="h-3 rounded w-2/5"   style={{ background: BRAND.border }} />
+        <div className="flex items-center justify-between pt-2">
+          <div className="h-5 rounded-full w-16" style={{ background: BRAND.border }} />
+          <div className="h-7 rounded-xl w-16"   style={{ background: BRAND.border }} />
         </div>
       </div>
     </div>
   )
 }
 
-// ── Status badge ──────────────────────────────────────────────────────────────
+// ─── Status badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
-  if (status === 'ACTIVE') {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 border border-emerald-100">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
-        Active
-      </span>
-    )
-  }
+  const isActive = status === 'ACTIVE'
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 border border-red-100">
-      <span className="h-1.5 w-1.5 rounded-full bg-red-400 inline-block" />
-      Out of Service
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
+      style={{
+        background: isActive ? '#F0FDF4' : '#FEF2F2',
+        border:     `1px solid ${isActive ? '#BBF7D0' : '#FECACA'}`,
+        color:      isActive ? '#15803D' : '#DC2626',
+      }}
+    >
+      <span
+        className="inline-block h-1.5 w-1.5 rounded-full"
+        style={{ background: isActive ? '#22C55E' : '#F87171' }}
+      />
+      {isActive ? 'Active' : 'Out of Service'}
     </span>
   )
 }
 
-// ── Single resource card ──────────────────────────────────────────────────────
-function ResourceCard({ resource }) {
-  const icon = TYPE_ICONS[resource.type] || '📦'
-  const thumbClass = TYPE_THUMB_CLASS[resource.type] || 'bg-slate-50'
-  const isActive = resource.status === 'ACTIVE'
+// ─── Type chip (filter button) ────────────────────────────────────────────────
+function TypeChip({ value, label, icon, count, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-150"
+      style={
+        active
+          ? { background: BRAND.primary, color: '#fff', border: `1.5px solid ${BRAND.primary}` }
+          : { background: '#fff', color: BRAND.primary, border: `1.5px solid ${BRAND.border}` }
+      }
+      onMouseEnter={e => { if (!active) e.currentTarget.style.borderColor = BRAND.accent }}
+      onMouseLeave={e => { if (!active) e.currentTarget.style.borderColor = BRAND.border }}
+    >
+      {icon && <span style={{ fontSize: 13 }}>{icon}</span>}
+      {label}
+      <span
+        className="rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+        style={
+          active
+            ? { background: 'rgba(255,255,255,0.2)', color: '#fff' }
+            : { background: BRAND.bg, color: BRAND.accent }
+        }
+      >
+        {count}
+      </span>
+    </button>
+  )
+}
+
+// ─── Resource card ────────────────────────────────────────────────────────────
+function ResourceCard({ resource, onBook }) {
+  const meta      = TYPE_META[resource.type] || DEFAULT_TYPE
+  const isActive  = resource.status === 'ACTIVE'
+  const unitLabel = resource.type === 'EQUIPMENT' ? 'units' : 'seats'
 
   return (
-    <div className="group rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+    <div
+      className="rounded-2xl bg-white overflow-hidden transition-all duration-200"
+      style={{ border: `1px solid ${BRAND.border}`, boxShadow: '0 1px 3px rgba(57,88,134,0.06)' }}
+      onMouseEnter={e => {
+        e.currentTarget.style.boxShadow = '0 6px 20px rgba(57,88,134,0.13)'
+        e.currentTarget.style.transform  = 'translateY(-2px)'
+        e.currentTarget.style.borderColor = BRAND.light
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.boxShadow  = '0 1px 3px rgba(57,88,134,0.06)'
+        e.currentTarget.style.transform  = 'translateY(0)'
+        e.currentTarget.style.borderColor = BRAND.border
+      }}
+    >
       {/* Thumbnail */}
-      <div className={`h-[88px] flex items-center justify-center text-4xl ${thumbClass}`}>
-        {icon}
+      <div
+        className="h-[88px] flex items-center justify-center text-4xl relative"
+        style={{ background: meta.bg }}
+      >
+        {meta.icon}
+        {/* Type dot accent */}
+        <span
+          className="absolute top-3 right-3 h-2 w-2 rounded-full"
+          style={{ background: meta.dot }}
+        />
       </div>
 
       {/* Body */}
       <div className="p-4">
         {/* Type label */}
-        <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
-          {TYPE_LABELS[resource.type] || resource.type}
+        <span
+          className="text-[10px] font-bold uppercase tracking-widest"
+          style={{ color: BRAND.accent }}
+        >
+          {meta.label}
         </span>
 
         {/* Name */}
-        <h3 className="mt-0.5 text-sm font-semibold text-slate-900 leading-snug truncate">
+        <h3
+          className="mt-0.5 text-sm font-bold leading-snug truncate"
+          style={{ color: BRAND.text }}
+          title={resource.name}
+        >
           {resource.name}
         </h3>
 
-        {/* Meta */}
+        {/* Meta rows */}
         <div className="mt-2 space-y-1">
           {resource.location && (
-            <p className="flex items-center gap-1.5 text-xs text-slate-500">
+            <p className="flex items-center gap-1.5 text-xs" style={{ color: BRAND.muted }}>
               <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <span className="truncate">{resource.location}</span>
             </p>
           )}
           {resource.capacity != null && (
-            <p className="flex items-center gap-1.5 text-xs text-slate-500">
+            <p className="flex items-center gap-1.5 text-xs" style={{ color: BRAND.muted }}>
               <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" />
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" />
               </svg>
-              <span>{resource.capacity} {resource.type === 'EQUIPMENT' ? 'kit' : 'seats'}</span>
+              <span>{resource.capacity} {unitLabel}</span>
             </p>
           )}
         </div>
@@ -111,12 +173,16 @@ function ResourceCard({ resource }) {
         <div className="mt-3 flex items-center justify-between">
           <StatusBadge status={resource.status} />
           {isActive && (
-            <a
-              href={`/booking/create?resourceId=${resource.id}`}
-              className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 transition-colors"
+            <button
+              type="button"
+              onClick={() => onBook(resource.id)}
+              className="inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold text-white transition-all duration-150"
+              style={{ background: `linear-gradient(135deg, #4A6FA5, ${BRAND.primary})` }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.88'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(57,88,134,0.35)' }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1';    e.currentTarget.style.boxShadow = 'none' }}
             >
-              Book
-            </a>
+              Book Now
+            </button>
           )}
         </div>
       </div>
@@ -124,64 +190,66 @@ function ResourceCard({ resource }) {
   )
 }
 
-// ── Type filter chips ─────────────────────────────────────────────────────────
-function TypeChip({ value, active, count, onClick }) {
+// ─── Stat pill ────────────────────────────────────────────────────────────────
+function StatPill({ value, label, bg, textColor, borderColor }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium border transition-all ${
-        active
-          ? 'bg-slate-900 text-white border-slate-900'
-          : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
-      }`}
+    <span
+      className="rounded-full px-3.5 py-1.5 text-xs font-semibold"
+      style={{ background: bg, border: `1px solid ${borderColor}`, color: textColor }}
     >
-      {value === 'All' ? 'All types' : TYPE_LABELS[value] || value}
-      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
-        {count}
-      </span>
-    </button>
+      <strong>{value}</strong> {label}
+    </span>
   )
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
+// ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState({ hasFilters, onClear }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="text-5xl mb-4">{hasFilters ? '🔍' : '📭'}</div>
-      <p className="text-base font-semibold text-slate-700">
+    <div
+      className="flex flex-col items-center justify-center py-20 text-center rounded-2xl"
+      style={{ background: '#fff', border: `1.5px solid ${BRAND.border}` }}
+    >
+      <div
+        className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4"
+        style={{ background: BRAND.bg }}
+      >
+        {hasFilters ? '🔍' : '📭'}
+      </div>
+      <p className="text-base font-bold" style={{ color: BRAND.text }}>
         {hasFilters ? 'No matching resources' : 'No active resources'}
       </p>
-      <p className="mt-1 text-sm text-slate-400">
+      <p className="mt-1 text-sm" style={{ color: BRAND.muted }}>
         {hasFilters
-          ? 'Try adjusting your search or filters.'
+          ? 'Try adjusting your search or clearing the filters.'
           : 'There are currently no active resources available.'}
       </p>
       {hasFilters && (
         <button
           type="button"
           onClick={onClear}
-          className="mt-4 text-sm font-medium text-blue-600 hover:underline"
+          className="mt-4 text-sm font-semibold underline underline-offset-2"
+          style={{ color: BRAND.accent }}
         >
-          Clear filters
+          Clear all filters
         </button>
       )}
     </div>
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function ResourceCatalogue() {
-  const [resources, setResources]           = useState([])
-  const [loading, setLoading]               = useState(true)
-  const [error, setError]                   = useState('')
-  const [searchTerm, setSearchTerm]         = useState('')
-  const [typeFilter, setTypeFilter]         = useState('All')
-  const [bookingResourceId, setBookingResourceId] = useState(null)
-  const [successMsg, setSuccessMsg]         = useState('')
+  const [resources,          setResources]          = useState([])
+  const [loading,            setLoading]            = useState(true)
+  const [error,              setError]              = useState('')
+  const [searchTerm,         setSearchTerm]         = useState('')
+  const [typeFilter,         setTypeFilter]         = useState('All')
+  const [bookingResourceId,  setBookingResourceId]  = useState(null)
+  const [successMsg,         setSuccessMsg]         = useState('')
 
+  // ── Fetch ──
   useEffect(() => {
-    const fetchResources = async () => {
+    const fetch = async () => {
       try {
         setLoading(true)
         const data = await getAllResources()
@@ -193,16 +261,17 @@ export default function ResourceCatalogue() {
         setLoading(false)
       }
     }
-    fetchResources()
+    fetch()
   }, [])
 
-  // Auto-clear success banner after 4 seconds
+  // ── Auto-clear success banner ──
   useEffect(() => {
     if (!successMsg) return
-    const t = setTimeout(() => setSuccessMsg(''), 4000)
+    const t = setTimeout(() => setSuccessMsg(''), 4500)
     return () => clearTimeout(t)
   }, [successMsg])
 
+  // ── Derived data ──
   const activeResources = useMemo(
     () => resources.filter((r) => r.status === 'ACTIVE'),
     [resources]
@@ -213,12 +282,9 @@ export default function ResourceCatalogue() {
     [activeResources]
   )
 
-  // Count per type for chips
   const typeCounts = useMemo(() => {
     const counts = { All: activeResources.length }
-    types.forEach((t) => {
-      counts[t] = activeResources.filter((r) => r.type === t).length
-    })
+    types.forEach((t) => { counts[t] = activeResources.filter((r) => r.type === t).length })
     return counts
   }, [activeResources, types])
 
@@ -239,115 +305,176 @@ export default function ResourceCatalogue() {
   }, [activeResources, searchTerm, typeFilter])
 
   const hasFilters = searchTerm.trim() !== '' || typeFilter !== 'All'
+  const clearFilters = () => { setSearchTerm(''); setTypeFilter('All') }
 
-  const clearFilters = () => {
-    setSearchTerm('')
-    setTypeFilter('All')
-  }
-
-  // ── Summary stats ───────────────────────────────────────────────────────────
   const stats = useMemo(() => ({
-    total: resources.length,
-    active: activeResources.length,
+    total:        resources.length,
+    active:       activeResources.length,
     outOfService: resources.filter((r) => r.status === 'OUT_OF_SERVICE').length,
   }), [resources, activeResources])
 
   return (
-    <div className="min-h-screen py-10" style={{ background: '#F0F3FA' }}>
+    <div className="min-h-screen py-10" style={{ background: BRAND.bg }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Header */}
+        {/* ── Page header ── */}
         <div className="mb-8">
-          <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] mb-2" style={{ color: '#638ECB' }}>
-            <span style={{ width: 22, height: 2, background: '#638ECB', display: 'inline-block', borderRadius: 2 }} />
+          <p
+            className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.22em] mb-2"
+            style={{ color: BRAND.accent }}
+          >
+            <span style={{ width: 20, height: 2, background: BRAND.accent, display: 'inline-block', borderRadius: 2 }} />
             Facilities
           </p>
-          <h1 className="text-3xl font-extrabold" style={{ color: '#0F172A' }}>Resource Catalogue</h1>
-          <p className="mt-1 text-sm" style={{ color: '#64748B' }}>
-            Browse active campus resources and book directly.
+          <h1 className="text-3xl font-extrabold" style={{ color: BRAND.text }}>
+            Resource Catalogue
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: BRAND.muted }}>
+            Browse active campus facilities and equipment available for booking.
           </p>
-        </div>
 
-        {/* Success banner */}
-        {successMsg && (
-          <div className="mb-4 rounded-xl px-4 py-3 text-sm font-medium"
-            style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D' }}>
-            {successMsg}
-          </div>
-        )}
-
-        {/* Search + Filter */}
-        <div className="mb-6 grid gap-4 md:grid-cols-[1fr_auto] lg:grid-cols-[minmax(0,1fr)_220px_220px]">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search resources by name…"
-            className="w-full rounded-2xl bg-white px-4 py-3 text-sm shadow-sm outline-none transition"
-            style={{ border: '1.5px solid #D5DEEF', color: '#0F172A' }}
-            onFocus={e => e.target.style.borderColor = '#638ECB'}
-            onBlur={e => e.target.style.borderColor = '#D5DEEF'}
-          />
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="w-full rounded-2xl bg-white px-4 py-3 text-sm shadow-sm outline-none transition"
-            style={{ border: '1.5px solid #D5DEEF', color: '#0F172A' }}
-            onFocus={e => e.target.style.borderColor = '#638ECB'}
-            onBlur={e => e.target.style.borderColor = '#D5DEEF'}
-          >
-            <option value="All">All types</option>
-            {types.map((type) => (
-              <option key={type} value={type}>{type.replace(/_/g, ' ')}</option>
-            ))}
-          </div>
-        )}
-
-        {/* Table card */}
-        <div
-          className="overflow-hidden bg-white shadow-sm"
-          style={{ borderRadius: 28, border: '1.5px solid #D5DEEF' }}
-        >
-          {loading ? (
-            <div className="flex justify-center py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: '#395886' }} />
-            </div>
-          ) : error ? (
-            <div className="p-8 text-center text-sm font-medium" style={{ color: '#991B1B' }}>{error}</div>
-          ) : activeResources.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: '#F0F3FA' }}>
-                <svg className="w-7 h-7" style={{ color: '#638ECB' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium" style={{ color: '#64748B' }}>No active resources available.</p>
-            </div>
-          ) : filteredResources.length === 0 ? (
-            <div className="p-8 text-center text-sm font-medium" style={{ color: '#64748B' }}>
-              No resources match your search or filter.
-            </div>
-          ) : (
-            <div className="p-6">
-              <ResourceTable
-                resources={filteredResources}
-                onBook={(id) => setBookingResourceId(id)}
-              />
+          {/* ── Summary stat pills ── */}
+          {!loading && !error && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <StatPill value={stats.total}        label="total"        bg="#fff"    textColor={BRAND.primary} borderColor={BRAND.border} />
+              <StatPill value={stats.active}       label="active"       bg="#F0FDF4" textColor="#15803D"       borderColor="#BBF7D0" />
+              {stats.outOfService > 0 && (
+                <StatPill value={stats.outOfService} label="out of service" bg="#FEF2F2" textColor="#DC2626" borderColor="#FECACA" />
+              )}
             </div>
           )}
         </div>
 
+        {/* ── Success banner ── */}
+        {successMsg && (
+          <div
+            className="mb-5 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold fade-up"
+            style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D' }}
+          >
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {successMsg}
+          </div>
+        )}
+
+        {/* ── Search bar ── */}
+        <div className="relative mb-4">
+          <svg
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4"
+            style={{ color: BRAND.accent }}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name or location…"
+            className="w-full rounded-2xl bg-white py-3 pl-11 pr-10 text-sm shadow-sm outline-none transition-colors"
+            style={{ border: `1.5px solid ${BRAND.border}`, color: BRAND.text }}
+            onFocus={e => e.target.style.borderColor = BRAND.accent}
+            onBlur={e  => e.target.style.borderColor = BRAND.border}
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors"
+              style={{ color: BRAND.muted }}
+              onMouseEnter={e => e.currentTarget.style.color = BRAND.primary}
+              onMouseLeave={e => e.currentTarget.style.color = BRAND.muted}
+              aria-label="Clear search"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* ── Type filter chips ── */}
+        {!loading && types.length > 0 && (
+          <div className="mb-5 flex flex-wrap gap-2">
+            <TypeChip
+              value="All" label="All types" icon={null}
+              count={typeCounts['All']}
+              active={typeFilter === 'All'}
+              onClick={() => setTypeFilter('All')}
+            />
+            {types.map((type) => {
+              const m = TYPE_META[type] || DEFAULT_TYPE
+              return (
+                <TypeChip
+                  key={type}
+                  value={type} label={m.label} icon={m.icon}
+                  count={typeCounts[type] || 0}
+                  active={typeFilter === type}
+                  onClick={() => setTypeFilter(type)}
+                />
+              )
+            })}
+          </div>
+        )}
+
+        {/* ── Result count + clear ── */}
+        {!loading && !error && filteredResources.length > 0 && (
+          <p className="mb-4 text-xs font-semibold" style={{ color: BRAND.muted }}>
+            Showing {filteredResources.length} resource{filteredResources.length !== 1 ? 's' : ''}
+            {hasFilters && (
+              <>
+                {' · '}
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="underline underline-offset-2"
+                  style={{ color: BRAND.accent }}
+                >
+                  Clear filters
+                </button>
+              </>
+            )}
+          </p>
+        )}
+
+        {/* ── Content area ── */}
+        {error ? (
+          <div
+            className="rounded-2xl px-6 py-5 text-sm font-medium"
+            style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B' }}
+          >
+            ⚠️ {error}
+          </div>
+        ) : loading ? (
+          /* Skeleton grid */
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : filteredResources.length === 0 ? (
+          <EmptyState hasFilters={hasFilters} onClear={clearFilters} />
+        ) : (
+          /* Card grid */
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {filteredResources.map((resource) => (
+              <ResourceCard
+                key={resource.id}
+                resource={resource}
+                onBook={(id) => setBookingResourceId(id)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Booking modal — opens pre-filled when Book Now is clicked */}
+      {/* ── Booking modal ── */}
       {bookingResourceId !== null && (
         <CreateBookingPage
           prefillResourceId={bookingResourceId}
           onClose={() => setBookingResourceId(null)}
           onSuccess={(msg) => {
             setBookingResourceId(null)
-            setSuccessMsg(msg)
+            setSuccessMsg(msg || 'Booking request submitted successfully!')
           }}
         />
       )}

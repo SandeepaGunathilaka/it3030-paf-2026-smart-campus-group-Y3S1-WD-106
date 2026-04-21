@@ -49,18 +49,9 @@ export default function ResourceCatalogue() {
   return (
     <div className="min-h-screen bg-slate-50 py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Resource Catalogue</h1>
-            <p className="mt-2 text-sm text-slate-600">Browse the current active campus resources available for booking.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => alert('Booking feature coming soon')}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700"
-          >
-            Book Resource
-          </button>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900">Resource Catalogue</h1>
+          <p className="mt-2 text-sm text-slate-600">Browse the current active campus resources available for booking.</p>
         </div>
 
         <div className="mb-6 grid gap-4 md:grid-cols-[1fr_auto] lg:grid-cols-[minmax(0,1fr)_220px_220px]">

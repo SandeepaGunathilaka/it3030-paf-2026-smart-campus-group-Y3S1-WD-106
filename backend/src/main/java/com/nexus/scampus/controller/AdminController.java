@@ -92,7 +92,7 @@ public class AdminController {
         if (userRepository.existsByEmail(req.email())) {
             throw new BadRequestException("A user with this email already exists");
         }
-        if (userRepository.existsByGoogleId(req.googleId())) {
+        if (req.googleId() != null && !req.googleId().isBlank() && userRepository.existsByGoogleId(req.googleId())) {
             throw new BadRequestException("A user with this Google ID already exists");
         }
 

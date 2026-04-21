@@ -1,5 +1,5 @@
 import axios from 'axios'
-
+// custom axios instance with a base URL and interceptors for handling authentication tokens and unauthorized responses.
 const api = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },

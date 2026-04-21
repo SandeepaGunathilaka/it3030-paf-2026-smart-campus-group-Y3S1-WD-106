@@ -1,5 +1,5 @@
 import api from './axiosConfig'
-
+// API functions for fetching user lists, pending approvals, statistics,  creating staff, updating roles,approving/rejecting del users.
 export const adminApi = {
   getUsers:       ()           => api.get('/admin/users').then(r => r.data),
   getPending:     ()           => api.get('/admin/users/pending').then(r => r.data),

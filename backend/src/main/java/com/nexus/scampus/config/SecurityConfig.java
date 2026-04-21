@@ -20,24 +20,27 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
+    //Security configuration for the application, including JWT authentication and OAuth2 login
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final OAuth2UserService oAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final CookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository;
 
+    
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    //Defines security rules and filters for incoming HTTP requests
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        //Disable CSRF and set session management to stateless since we're using JWTs
         http
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // ── Public ─────────────────────────────────────────────────
+                // ── Public routes ──────────────────────────────────────
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/oauth2/authorize/**").permitAll()
                 .requestMatchers("/oauth2/callback/**").permitAll()

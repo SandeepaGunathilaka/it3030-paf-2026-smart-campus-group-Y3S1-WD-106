@@ -33,8 +33,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
+        //Get logged-in user                                    
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
 
+        //Load user from database
         User user = userRepository.findById(principal.getId())
                 .orElseThrow(() -> new IllegalStateException("User not found after OAuth2 login"));
 
@@ -58,7 +60,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .build().toUriString();
             log.debug("OAuth2 login success for user: {}", user.getEmail());
         }
-
+        // Send user to frontend
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 }

@@ -11,16 +11,17 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+// represents the logged-in user, providing user details and roles for both normal login and OAuth2 login in Spring Security.
 
 @Getter
 @AllArgsConstructor
 public class UserPrincipal implements OAuth2User, UserDetails {
-
+    
     private final Long id;
     private final String email;
     private final Collection<? extends GrantedAuthority> authorities;
     private Map<String, Object> attributes;
-
+    
     public static UserPrincipal create(User user) {
         List<GrantedAuthority> authorities = List.of(
                 new SimpleGrantedAuthority("ROLE_" + user.getRole().name())

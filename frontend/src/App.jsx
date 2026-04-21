@@ -18,6 +18,7 @@ import MyTicketsPage from './pages/Tickets/MyTicketsPage'
 import TicketDetailPage from './pages/Tickets/TicketDetailPage'
 import AdminTicketsPage from './pages/Tickets/AdminTicketsPage'
 import TechnicianTicketsPage from './pages/Tickets/TechnicianTicketsPage'
+import ProfilePage from './pages/OauthAdmin/ProfilePage'
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth()
@@ -59,6 +60,7 @@ export default function App() {
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="profile" element={<ProfilePage />} />
         <Route path="resource-catalogue" element={<ResourceCatalogue />} />
 
         <Route path="tickets/create" element={<CreateTicketPage />} />

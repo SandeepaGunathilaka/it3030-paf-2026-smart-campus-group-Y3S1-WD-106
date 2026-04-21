@@ -5,10 +5,7 @@ import { notificationApi } from '../api/notificationApi'
 import NotificationPanel from './NotificationPanel'
 
 const CampusLogo = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-    <path d="M12 3L3 9.5V20C3 20.6 3.4 21 4 21H8.5V15.5H15.5V21H20C20.6 21 21 20.6 21 20V9.5L12 3Z" fill="white" />
-    <rect x="10" y="15.5" width="4" height="5.5" rx="0.5" fill="rgba(255,255,255,0.5)" />
-  </svg>
+  <img src="/logo/nexus.png" alt="Nexus" className="h-6 w-6 object-contain" />
 )
 
 export default function Navbar() {
@@ -103,8 +100,8 @@ export default function Navbar() {
                 <CampusLogo />
               </div>
               <div className="hidden sm:block">
-                <span className="text-white font-bold text-[17px] tracking-tight leading-none">Smart Campus</span>
-                <span className="block text-blue-200 text-[10px] font-medium tracking-widest uppercase leading-none mt-0.5">Operations Hub</span>
+                <span className="text-white font-bold text-[17px] tracking-tight leading-none">NEXUS</span>
+                <span className="block text-blue-200 text-[10px] font-medium tracking-widest uppercase leading-none mt-0.5">Smart Campus Hub</span>
               </div>
             </Link>
 

@@ -534,9 +534,9 @@ export default function DashboardPage() {
               <h4 className="text-white font-bold text-xs uppercase tracking-[0.16em] mb-5">Services</h4>
               <ul className="space-y-3">
                 {[
-                  { label: 'Facility Booking',  path: '/resource-catalogue' },
+                  { label: 'Facility Booking',  path: '/bookings/my' },
                   { label: 'Support Tickets',   path: null },
-                  { label: 'Campus Resources',  path: null },
+                  { label: 'Campus Resources',  path: '/resource-catalogue' },
                   { label: 'Maintenance',       path: null },
                   { label: 'Administration',    path: null },
                 ].map(s => (

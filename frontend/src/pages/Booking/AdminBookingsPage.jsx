@@ -8,6 +8,14 @@ const STATUS_STYLES = {
   CANCELLED: 'bg-gray-100   text-gray-600',
 }
 
+// #1 — Per-status accent colors for summary cards
+const SUMMARY_COLORS = {
+  PENDING:   '#B45309',
+  APPROVED:  '#395886',
+  REJECTED:  '#991B1B',
+  CANCELLED: '#6B7280',
+}
+
 function formatDateTime(iso) {
   if (!iso) return '—'
   return new Date(iso).toLocaleString('en-GB', {
@@ -161,9 +169,13 @@ export default function AdminBookingsPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'].map(s => (
-          <div key={s} className="bg-white rounded-lg border border-gray-200 p-4">
+          <div
+            key={s}
+            className="bg-white rounded-lg border border-gray-200 p-4"
+            style={{ borderLeft: `3px solid ${SUMMARY_COLORS[s]}` }}
+          >
             <p className="text-xs text-gray-500 uppercase tracking-wide">{s}</p>
-            <p className="text-2xl font-semibold text-gray-900 mt-1">{counts[s] || 0}</p>
+            <p className="text-2xl font-semibold mt-1" style={{ color: SUMMARY_COLORS[s] }}>{counts[s] || 0}</p>
           </div>
         ))}
       </div>
@@ -187,11 +199,14 @@ export default function AdminBookingsPage() {
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
               statusFilter === s
-                ? 'bg-blue-600 text-white border-blue-600'
+                ? 'text-white border-transparent'
                 : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
             }`}
+            style={statusFilter === s
+              ? { background: 'linear-gradient(135deg, #4A6FA5, #395886)', border: 'none' }
+              : {}}
           >
             {s || 'All'}
           </button>

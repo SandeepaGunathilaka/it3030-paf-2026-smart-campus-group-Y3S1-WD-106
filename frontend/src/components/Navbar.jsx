@@ -115,19 +115,24 @@ export default function Navbar() {
 
               {/* ── Booking links — all logged-in users ── */}
               <NavLink to="/bookings/my"  className={navLinkClass}>My Bookings</NavLink>
-              <NavLink to="/bookings/new" className={navLinkClass}>New Booking</NavLink>
 
-              {/* ── Technician — TECHNICIAN, ADMIN, SUPER_ADMIN ── */}
-              {canAccessTechnician && (
-                <NavLink to="/technician" className={navLinkClass}>Technician</NavLink>
+              {/* ── Ticket links — only for regular users ── */}
+              {!isSuperOrAdmin && !isTechnician && (
+                <NavLink to="/tickets/my" className={navLinkClass}>My Tickets</NavLink>
               )}
 
-              {/* ── Admin-level only — ADMIN and SUPER_ADMIN ── */}
+              {/* ── Technician ── */}
+              {isTechnician && (
+                <NavLink to="/tickets/technician" className={navLinkClass}>My Assignments</NavLink>
+              )}
+
+              {/* ── Admin-level only ── */}
               {isSuperOrAdmin && (
                 <>
-                  <NavLink to="/bookings/admin" className={navLinkClass}>Booking Mgmt</NavLink>
+                  <NavLink to="/tickets/admin" className={navLinkClass}>Tickets</NavLink>
                   <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>
                 </>
+                
               )}
 
               <a onClick={handleSectionLink('contact')} className={anchorLinkClass}>Contact</a>

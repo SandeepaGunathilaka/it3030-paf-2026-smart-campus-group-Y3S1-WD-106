@@ -536,7 +536,7 @@ export default function DashboardPage() {
                 {[
                   { label: 'Facility Booking',  path: '/bookings/my' },
                   { label: 'Support Tickets',   path: null },
-                  { label: 'Campus Resources',  path: null },
+                  { label: 'Campus Resources',  path: '/resource-catalogue' },
                   { label: 'Maintenance',       path: null },
                   { label: 'Administration',    path: null },
                 ].map(s => (

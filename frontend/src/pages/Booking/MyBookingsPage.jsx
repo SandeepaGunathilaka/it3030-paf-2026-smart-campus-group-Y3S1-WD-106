@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import CreateBookingPage from './CreateBookingPage'
 import { bookingApi } from '../../api/bookingApi'
+import api from '../../api/axiosConfig'
 
 const STATUS_STYLES = {
   PENDING:   { bg: '#FFF8E7', color: '#B45309', border: '#FDE68A' },
@@ -10,12 +11,71 @@ const STATUS_STYLES = {
   CANCELLED: { bg: '#F9FAFB', color: '#6B7280', border: '#E5E7EB' },
 }
 
+// #1 — Per-status accent colors for summary cards
+const SUMMARY_COLORS = {
+  PENDING:   '#B45309',
+  APPROVED:  '#395886',
+  REJECTED:  '#991B1B',
+  CANCELLED: '#6B7280',
+}
+
 function formatDateTime(iso) {
   if (!iso) return '—'
   return new Date(iso).toLocaleString('en-GB', {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
+}
+
+// #7 — Status timeline mini-component
+const TIMELINE_STEPS = ['PENDING', 'APPROVED', 'IN USE', 'DONE']
+function StatusTimeline({ status }) {
+  const activeIdx = {
+    PENDING:   0,
+    APPROVED:  1,
+    CANCELLED: 1, // stays at APPROVED step but won't highlight further
+    REJECTED:  1,
+    IN_USE:    2,
+    DONE:      3,
+  }[status] ?? 0
+
+  const isFailed = status === 'REJECTED' || status === 'CANCELLED'
+
+  return (
+    <div className="flex items-center gap-1 mt-2">
+      {TIMELINE_STEPS.map((step, idx) => {
+        const isActive  = idx === activeIdx && !isFailed
+        const isDone    = idx < activeIdx && !isFailed
+        const isFail    = isFailed && idx === activeIdx
+        const dotColor  = isDone ? '#395886' : isActive ? STATUS_STYLES[status]?.color || '#395886' : isFail ? STATUS_STYLES[status]?.color || '#991B1B' : '#D1D5DB'
+        const lineColor = isDone ? '#395886' : '#E5E7EB'
+
+        return (
+          <div key={step} className="flex items-center gap-1">
+            <div className="flex flex-col items-center gap-0.5">
+              <div
+                style={{
+                  width: isActive || isFail ? 10 : 7,
+                  height: isActive || isFail ? 10 : 7,
+                  borderRadius: '50%',
+                  background: dotColor,
+                  border: isActive || isFail ? `2px solid ${dotColor}` : 'none',
+                  boxShadow: isActive ? `0 0 0 3px ${dotColor}22` : 'none',
+                  transition: 'all 0.2s',
+                }}
+              />
+              <span style={{ fontSize: 8, color: isActive ? dotColor : '#9CA3AF', fontWeight: isActive ? 700 : 400, whiteSpace: 'nowrap' }}>
+                {step}
+              </span>
+            </div>
+            {idx < TIMELINE_STEPS.length - 1 && (
+              <div style={{ width: 20, height: 1.5, background: lineColor, marginBottom: 10, borderRadius: 2 }} />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function MyBookingsPage() {
@@ -27,6 +87,8 @@ export default function MyBookingsPage() {
   const [cancellingId, setCancellingId] = useState(null)
   const [confirmCancelId, setConfirmCancelId] = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  // #2 — Resource name lookup map
+  const [resourceNames, setResourceNames] = useState({})
 
   useEffect(() => {
     fetchBookings()
@@ -45,6 +107,18 @@ export default function MyBookingsPage() {
     try {
       const data = await bookingApi.getMyBookings()
       setBookings(data)
+
+      // #2 — Fetch resource names for all unique resource IDs
+      const ids = [...new Set(data.map(b => b.resourceId))]
+      const names = {}
+      await Promise.allSettled(
+        ids.map(id =>
+          api.get(`/resources/${id}`)
+            .then(r => { names[id] = r.data.name })
+            .catch(() => { names[id] = `Resource #${id}` })
+        )
+      )
+      setResourceNames(names)
     } catch {
       setError('Failed to load bookings. Please try again.')
     } finally {
@@ -83,20 +157,28 @@ export default function MyBookingsPage() {
           <h1 className="text-2xl font-bold text-gray-900">My Bookings</h1>
           <p className="text-sm text-gray-500 mt-1">Track the status of your booking requests.</p>
         </div>
+        {/* #3 — Brand gradient button */}
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 text-sm font-semibold text-white rounded-xl transition-all hover:shadow-lg hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #4A6FA5, #395886)' }}
         >
           + New Booking
         </button>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards — #1 color-coded per status */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'].map(s => (
-          <div key={s} className="bg-white rounded-lg border border-gray-200 p-4">
+          <div
+            key={s}
+            className="bg-white rounded-lg border border-gray-200 p-4"
+            style={{ borderLeft: `3px solid ${SUMMARY_COLORS[s]}` }}
+          >
             <p className="text-xs text-gray-500 uppercase tracking-wide">{s}</p>
-            <p className="text-2xl font-semibold mt-1" style={{ color: '#395886' }}>{counts[s] || 0}</p>
+            <p className="text-2xl font-semibold mt-1" style={{ color: SUMMARY_COLORS[s] }}>
+              {counts[s] || 0}
+            </p>
           </div>
         ))}
       </div>
@@ -144,23 +226,29 @@ export default function MyBookingsPage() {
       {!loading && bookings.length > 0 && (
         <div className="space-y-3">
           {bookings.map(booking => (
+            // #4 — Left-side status stripe
             <div
               key={booking.id}
-              className="bg-white rounded-2xl border p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-              style={{ borderColor: '#D5DEEF' }}
+              className="bg-white rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 overflow-hidden"
+              style={{
+                border: '1px solid #D5DEEF',
+                borderLeftWidth: '4px',
+                borderLeftColor: STATUS_STYLES[booking.status]?.border || '#D5DEEF',
+              }}
             >
               {/* Left: info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span className="text-sm font-semibold text-gray-900">
-                    Resource #{booking.resourceId}
+                    {/* #2 — Show resource name instead of ID */}
+                    {resourceNames[booking.resourceId] || `Resource #${booking.resourceId}`}
                   </span>
-                  <span 
+                  <span
                     className="text-xs font-medium px-2 py-0.5 rounded-full"
                     style={{
-                      background: STATUS_STYLES[booking.status].bg,
-                      color: STATUS_STYLES[booking.status].color,
-                      border: `1px solid ${STATUS_STYLES[booking.status].border}`
+                      background: STATUS_STYLES[booking.status]?.bg,
+                      color: STATUS_STYLES[booking.status]?.color,
+                      border: `1px solid ${STATUS_STYLES[booking.status]?.border}`
                     }}
                   >
                     {booking.status}
@@ -180,6 +268,8 @@ export default function MyBookingsPage() {
                     Admin note: {booking.adminNote}
                   </p>
                 )}
+                {/* #7 — Status timeline */}
+                <StatusTimeline status={booking.status} />
               </div>
 
               {/* Right: actions */}
@@ -222,7 +312,7 @@ export default function MyBookingsPage() {
       )}
 
       {showCreateModal && (
-        <CreateBookingPage 
+        <CreateBookingPage
           onClose={() => setShowCreateModal(false)}
           onSuccess={(msg) => {
             setShowCreateModal(false)

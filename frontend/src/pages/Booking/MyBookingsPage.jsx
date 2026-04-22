@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import CreateBookingPage from './CreateBookingPage'
 import { bookingApi } from '../../api/bookingApi'
 import api from '../../api/axiosConfig'
+import BookingsCalendar from '../../components/Calendar/BookingsCalendar'
 
 const STATUS_STYLES = {
   PENDING:   { bg: '#FFF8E7', color: '#B45309',  border: '#FDE68A' },
@@ -94,6 +95,7 @@ function StatusTimeline({ status, startTime, endTime }) {
 export default function MyBookingsPage() {
   const location = useLocation()
   const [bookings, setBookings] = useState([])
+  const [selectedDate, setSelectedDate] = useState(null)
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState('')
   const [successMsg, setSuccessMsg] = useState(location.state?.success || '')
@@ -177,8 +179,17 @@ export default function MyBookingsPage() {
     return acc
   }, {})
 
+  const displayedBookings = bookings.filter(b => {
+    if (!selectedDate) return true
+    const dayStart = new Date(selectedDate + 'T00:00:00')
+    const dayEnd = new Date(selectedDate + 'T23:59:59')
+    return new Date(b.startTime) <= dayEnd && new Date(b.endTime) >= dayStart
+  })
+
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -252,9 +263,15 @@ export default function MyBookingsPage() {
       )}
 
       {/* Bookings list */}
-      {!loading && bookings.length > 0 && (
+      {!loading && displayedBookings.length > 0 && (
         <div className="space-y-3">
-          {bookings.map(booking => (
+          {selectedDate && (
+            <div className="text-sm text-gray-600 mb-1">
+              Showing bookings for <span className="font-medium">{selectedDate}</span>
+              <button onClick={() => setSelectedDate(null)} className="ml-3 text-xs text-blue-600">Clear</button>
+            </div>
+          )}
+          {displayedBookings.map(booking => (
             // #4 — Left-side status stripe
             <div
               key={booking.id}
@@ -354,6 +371,11 @@ export default function MyBookingsPage() {
           }}
         />
       )}
+        </div>
+        <div>
+          <BookingsCalendar bookings={bookings} onDateSelect={(d) => setSelectedDate(d)} />
+        </div>
+      </div>
     </div>
   )
 }

@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 
 const CATEGORY_META = {
   BOOKING:  { label: 'Booking Notifications',  desc: 'Approval, rejection and cancellation of your bookings', icon: '🗓️' },
-  TICKET:   { label: 'Ticket Notifications',   desc: 'Status changes, assignments and new comments on your tickets', icon: '🔧' },
+  TICKET:   { label: 'Ticket Notifications',   desc: 'Status changes, assignments and new comments on your tickets', icon: '🎫' },
   ACCOUNT:  { label: 'Account Notifications',  desc: 'Account approval or rejection updates', icon: '👤' },
 }
 

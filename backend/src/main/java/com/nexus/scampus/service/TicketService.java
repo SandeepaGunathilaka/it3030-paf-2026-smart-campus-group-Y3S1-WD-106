@@ -44,7 +44,8 @@ public class TicketService {
     private final UserRepository userRepository;
     private final ResourceRepository resourceRepository;
     private final NotificationService notificationService;
-    private Optional<CloudinaryService> cloudinaryService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private Optional<CloudinaryService> cloudinaryService = Optional.empty();
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 

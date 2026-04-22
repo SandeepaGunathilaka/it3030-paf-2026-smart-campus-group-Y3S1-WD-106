@@ -8,6 +8,7 @@ export default function TechnicianTicketsPage() {
   const [tickets, setTickets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
 
   useEffect(() => {
     fetchAssignedTickets()
@@ -23,6 +24,8 @@ export default function TechnicianTicketsPage() {
       setLoading(false)
     }
   }
+
+  const filteredTickets = statusFilter ? tickets.filter(t => t.status === statusFilter) : tickets
 
   const formatDate = (dateStr) =>
     new Date(dateStr).toLocaleDateString('en-US', {
@@ -65,6 +68,35 @@ export default function TechnicianTicketsPage() {
         </div>
       )}
 
+      {/* Status filter */}
+      {!loading && tickets.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-5">
+          {[
+            { label: 'All', value: '' },
+            { label: 'Open', value: 'OPEN' },
+            { label: 'In Progress', value: 'IN_PROGRESS' },
+            { label: 'Resolved', value: 'RESOLVED' },
+            { label: 'Closed', value: 'CLOSED' },
+            { label: 'Rejected', value: 'REJECTED' },
+          ].map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setStatusFilter(opt.value)}
+              className="px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors"
+              style={statusFilter === opt.value
+                ? { background: 'linear-gradient(135deg, #4A6FA5, #395886)', color: '#fff', borderColor: 'transparent' }
+                : { background: '#fff', color: '#374151', borderColor: '#D5DEEF' }
+              }
+            >
+              {opt.label}
+              <span className="ml-1.5 opacity-70">
+                ({opt.value ? tickets.filter(t => t.status === opt.value).length : tickets.length})
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Stats bar */}
       {!loading && tickets.length > 0 && (
         <div className="grid grid-cols-4 gap-4 mb-6">
@@ -86,7 +118,12 @@ export default function TechnicianTicketsPage() {
       {/* Tickets list */}
       {!loading && tickets.length > 0 && (
         <div className="space-y-4">
-          {tickets.map(ticket => (
+          {filteredTickets.length === 0 && (
+            <div className="text-center py-12 bg-white rounded-xl" style={{ border: '1.5px solid #D5DEEF' }}>
+              <p className="text-sm" style={{ color: '#64748B' }}>No tickets match this filter.</p>
+            </div>
+          )}
+          {filteredTickets.map(ticket => (
             <div
               key={ticket.id}
               onClick={() => navigate(`/tickets/${ticket.id}`)}

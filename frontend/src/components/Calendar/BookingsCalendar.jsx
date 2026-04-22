@@ -39,18 +39,18 @@ export default function BookingsCalendar({ bookings = [], onDateSelect }) {
   const [hoveredDate, setHoveredDate] = useState(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
 
-  // Only include PENDING and APPROVED bookings in calendar counts/previews
-  const countsByDate = useMemo(() => {
+  // Build a map of date -> { PENDING: n, APPROVED: n }
+  const statusesByDate = useMemo(() => {
     const map = {}
     bookings.forEach(b => {
       if (!b || !b.status) return
       if (!(b.status === 'PENDING' || b.status === 'APPROVED')) return
       const start = new Date(b.startTime)
       const end = new Date(b.endTime)
-      // mark each date in the inclusive range
       for (let d = new Date(start); d <= end; d = addDays(d, 1)) {
         const key = toYMD(d)
-        map[key] = (map[key] || 0) + 1
+        if (!map[key]) map[key] = { PENDING: 0, APPROVED: 0 }
+        map[key][b.status] = (map[key][b.status] || 0) + 1
       }
     })
     return map
@@ -81,40 +81,54 @@ export default function BookingsCalendar({ bookings = [], onDateSelect }) {
       </div>
 
       <div className="grid grid-cols-7 gap-1">
-        {weeks.flat().map(day => {
-          const key = toYMD(day)
-          const isCurrentMonth = day.getMonth() === view.month
-          const count = countsByDate[key] || 0
-          return (
-            <button
-              key={key}
-              onClick={() => onDateSelect && onDateSelect(key)}
-              onMouseEnter={(e) => { setHoveredDate(key); setTooltipPos({ x: e.clientX, y: e.clientY }) }}
-              onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}
-              onMouseLeave={() => setHoveredDate(null)}
-              className={`flex flex-col items-center justify-start p-2 h-14 rounded group transition-colors ${isCurrentMonth ? 'bg-white' : 'bg-gray-50 text-gray-300'}`}
-            >
-              <div className="w-full flex items-center justify-between">
-                <span className={`text-sm ${isCurrentMonth ? 'text-gray-700' : 'text-gray-300'}`}>{day.getDate()}</span>
-                {count > 0 && (
-                  <span className="ml-1 inline-block bg-blue-600 text-white text-[10px] px-1 py-0.5 rounded">{count}</span>
+      {weeks.flat().map(day => {
+        const key = toYMD(day)
+        const isCurrentMonth = day.getMonth() === view.month
+        const statusCounts = statusesByDate[key] || { PENDING: 0, APPROVED: 0 }
+        const hasPending = statusCounts.PENDING > 0
+        const hasApproved = statusCounts.APPROVED > 0
+        return (
+          <button
+            key={key}
+            onClick={() => onDateSelect && onDateSelect(key)}
+            onMouseEnter={(e) => { setHoveredDate(key); setTooltipPos({ x: e.clientX, y: e.clientY }) }}
+            onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}
+            onMouseLeave={() => setHoveredDate(null)}
+            className={`flex flex-col items-center justify-start p-2 h-14 rounded group transition-colors ${isCurrentMonth ? 'bg-white' : 'bg-gray-50 text-gray-300'}`}
+          >
+            <div className="w-full flex items-center justify-between">
+              <span className={`text-sm ${isCurrentMonth ? 'text-gray-700' : 'text-gray-300'}`}>{day.getDate()}</span>
+              {/* Removed numeric badge; show colored dots for statuses */}
+              <div className="ml-1 flex items-center gap-1">
+                {hasPending && (
+                  <span className="inline-block w-3 h-3 rounded-full" style={{ background: '#B45309' }} />
+                )}
+                {hasApproved && (
+                  <span className="inline-block w-3 h-3 rounded-full" style={{ background: '#16A34A' }} />
                 )}
               </div>
-              <div className="w-full mt-1">
-                {count > 0 && (
-                  <div className="h-1 rounded-full bg-blue-100 group-hover:bg-blue-200" />
-                )}
-              </div>
-            </button>
-          )
-        })}
+            </div>
+            <div className="w-full mt-1">
+              {(hasPending || hasApproved) && (
+                <div className="h-1 rounded-full bg-transparent" />
+              )}
+            </div>
+          </button>
+        )
+      })}
       </div>
 
       <div className="mt-3 text-xs text-gray-500">
         <div className="font-medium text-sm mb-1">Legend</div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-blue-600" />
-          <span>Booked day</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ background: '#B45309' }} />
+            <span>Pending</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ background: '#16A34A' }} />
+            <span>Approved</span>
+          </div>
         </div>
       </div>
       <CalendarTooltip dateKey={hoveredDate} bookings={bookings} pos={tooltipPos} />

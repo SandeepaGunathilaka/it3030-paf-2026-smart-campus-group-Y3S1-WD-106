@@ -192,19 +192,11 @@ export default function MyBookingsPage() {
         <div className="lg:col-span-2">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Bookings</h1>
           <p className="text-sm text-gray-500 mt-1">Track the status of your booking requests.</p>
         </div>
-        {/* #3 — Brand gradient button */}
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 text-sm font-semibold text-white rounded-xl transition-all hover:shadow-lg hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #4A6FA5, #395886)' }}
-        >
-          + New Booking
-        </button>
       </div>
 
       {/* Summary cards — #1 color-coded per status */}
@@ -372,7 +364,14 @@ export default function MyBookingsPage() {
         />
       )}
         </div>
-        <div>
+        <div className="flex flex-col items-end gap-4">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 text-sm font-semibold text-white rounded-xl transition-all hover:shadow-lg hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #4A6FA5, #395886)' }}
+          >
+            + New Booking
+          </button>
           <BookingsCalendar bookings={bookings} onDateSelect={(d) => setSelectedDate(d)} />
         </div>
       </div>

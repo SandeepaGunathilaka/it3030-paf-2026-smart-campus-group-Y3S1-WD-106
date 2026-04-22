@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { bookingApi } from '../../api/bookingApi'
+import api from '../../api/axiosConfig'
 
 export default function CreateBookingPage({ onClose, onSuccess, prefillResourceId }) {
 
@@ -10,13 +11,45 @@ export default function CreateBookingPage({ onClose, onSuccess, prefillResourceI
     purpose:           '',
     expectedAttendees: '',
   })
+  const [capacity, setCapacity] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
 
   const handleChange = (e) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    if (name === 'expectedAttendees') {
+      // normalize to integer and apply bounds
+      let v = value === '' ? '' : Number(value)
+      if (v !== '' && Number.isNaN(v)) return
+      if (v !== '' && capacity != null) {
+        if (v > capacity) v = capacity
+        if (v < 1) v = 1
+      }
+      setForm(prev => ({ ...prev, expectedAttendees: v === '' ? '' : String(v) }))
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }))
+    }
     setError('')
   }
+
+  // Fetch resource details when prefillResourceId is provided
+  useEffect(() => {
+    if (prefillResourceId == null) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await api.get(`/resources/${prefillResourceId}`)
+        if (cancelled) return
+        const cap = res.data.capacity
+        setCapacity(cap)
+        // prefill expectedAttendees as capacity by default, but allow reducing
+        setForm(prev => ({ ...prev, expectedAttendees: cap != null ? String(Math.max(1, cap)) : prev.expectedAttendees }))
+      } catch (err) {
+        // ignore — leave expectedAttendees editable
+      }
+    })()
+    return () => { cancelled = true }
+  }, [prefillResourceId])
 
   // Send the local time string directly to the backend (no UTC conversion).
   // The backend uses LocalDateTime which has no timezone — converting to UTC
@@ -52,6 +85,19 @@ export default function CreateBookingPage({ onClose, onSuccess, prefillResourceI
     if (new Date(form.startTime) <= new Date()) {
       setError('Start time must be in the future.')
       return
+    }
+
+    // expectedAttendees validation: if provided, must be >=1 and <= capacity (if known)
+    if (form.expectedAttendees) {
+      const v = Number(form.expectedAttendees)
+      if (!Number.isInteger(v) || v < 1) {
+        setError('Expected attendees must be an integer greater than 0.')
+        return
+      }
+      if (capacity != null && v > capacity) {
+        setError(`Expected attendees cannot exceed resource capacity of ${capacity}.`)
+        return
+      }
     }
 
     setLoading(true)
@@ -228,10 +274,15 @@ export default function CreateBookingPage({ onClose, onSuccess, prefillResourceI
                 value={form.expectedAttendees}
                 onChange={handleChange}
                 min={1}
-                max={9999}
-                placeholder="Optional"
+                max={capacity != null ? capacity : 9999}
+                placeholder={capacity != null ? `Up to ${capacity}` : 'Optional'}
                 className="input"
               />
+              {capacity != null && (
+                <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>
+                  Capacity: {capacity} — attendees cannot exceed this value.
+                </p>
+              )}
             </div>
 
             {/* Actions */}

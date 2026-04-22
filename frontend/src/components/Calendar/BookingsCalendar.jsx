@@ -61,7 +61,7 @@ export default function BookingsCalendar({ bookings = [], onDateSelect }) {
   const monthLabel = new Date(view.year, view.month, 1).toLocaleString('en-GB', { month: 'long', year: 'numeric' })
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 sticky top-20">
+    <div className="bg-white rounded-xl border border-gray-200 p-4 sticky top-28">
       <div className="flex items-center justify-between mb-3">
         <button onClick={() => setView(v => {
           const m = v.month - 1

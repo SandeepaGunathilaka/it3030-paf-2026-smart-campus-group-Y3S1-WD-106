@@ -153,7 +153,23 @@ export default function MyBookingsPage() {
     }
   }
 
-  const canCancel = (status) => status === 'PENDING' || status === 'APPROVED'
+  // Determine whether a booking can be cancelled based on its current visual status.
+  // If an APPROVED booking's start time has arrived, it's considered 'IN_USE'
+  // and should no longer be cancellable.
+  const computeVisualStatus = (booking) => {
+    if (booking.status !== 'APPROVED') return booking.status
+    const now = new Date()
+    const start = new Date(booking.startTime)
+    const end = new Date(booking.endTime)
+    if (now >= end) return 'DONE'
+    if (now >= start) return 'IN_USE'
+    return 'APPROVED'
+  }
+
+  const canCancel = (booking) => {
+    const visual = computeVisualStatus(booking)
+    return visual === 'PENDING' || visual === 'APPROVED'
+  }
 
   // Summary counts
   const counts = bookings.reduce((acc, b) => {
@@ -294,7 +310,7 @@ export default function MyBookingsPage() {
                 <span className="text-xs text-gray-400">
                   {formatDateTime(booking.createdAt).split(',')[0]}
                 </span>
-                {canCancel(booking.status) && (
+                {canCancel(booking) && (
                   confirmCancelId === booking.id ? (
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-600 font-medium">Are you sure?</span>

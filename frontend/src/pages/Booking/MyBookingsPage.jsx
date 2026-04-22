@@ -5,10 +5,12 @@ import { bookingApi } from '../../api/bookingApi'
 import api from '../../api/axiosConfig'
 
 const STATUS_STYLES = {
-  PENDING:   { bg: '#FFF8E7', color: '#B45309', border: '#FDE68A' },
-  APPROVED:  { bg: '#F0F3FA', color: '#395886', border: '#B1C9EF' },
-  REJECTED:  { bg: '#FEF2F2', color: '#991B1B', border: '#FECACA' },
-  CANCELLED: { bg: '#F9FAFB', color: '#6B7280', border: '#E5E7EB' },
+  PENDING:   { bg: '#FFF8E7', color: '#B45309',  border: '#FDE68A' },
+  APPROVED:  { bg: '#F0F3FA', color: '#395886',  border: '#B1C9EF' },
+  REJECTED:  { bg: '#FEF2F2', color: '#991B1B',  border: '#FECACA' },
+  CANCELLED: { bg: '#F9FAFB', color: '#6B7280',  border: '#E5E7EB' },
+  IN_USE:    { bg: '#ECFDF5', color: '#065F46',  border: '#6EE7B7' },  // ← add
+  DONE:      { bg: '#F0F3FA', color: '#395886',  border: '#B1C9EF' },  // ← add
 }
 
 // #1 — Per-status accent colors for summary cards
@@ -29,15 +31,26 @@ function formatDateTime(iso) {
 
 // #7 — Status timeline mini-component
 const TIMELINE_STEPS = ['PENDING', 'APPROVED', 'IN USE', 'DONE']
-function StatusTimeline({ status }) {
+function StatusTimeline({ status, startTime, endTime }) {
+  // For APPROVED bookings, compute the visual step from current time
+  const visualStatus = (() => {
+    if (status !== 'APPROVED') return status
+    const now   = new Date()
+    const start = new Date(startTime)
+    const end   = new Date(endTime)
+    if (now >= end)   return 'DONE'
+    if (now >= start) return 'IN_USE'
+    return 'APPROVED'
+  })()
+
   const activeIdx = {
     PENDING:   0,
     APPROVED:  1,
-    CANCELLED: 1, // stays at APPROVED step but won't highlight further
+    CANCELLED: 1,
     REJECTED:  1,
     IN_USE:    2,
     DONE:      3,
-  }[status] ?? 0
+  }[visualStatus] ?? 0
 
   const isFailed = status === 'REJECTED' || status === 'CANCELLED'
 
@@ -47,7 +60,7 @@ function StatusTimeline({ status }) {
         const isActive  = idx === activeIdx && !isFailed
         const isDone    = idx < activeIdx && !isFailed
         const isFail    = isFailed && idx === activeIdx
-        const dotColor  = isDone ? '#395886' : isActive ? STATUS_STYLES[status]?.color || '#395886' : isFail ? STATUS_STYLES[status]?.color || '#991B1B' : '#D1D5DB'
+        const dotColor  = isDone ? '#395886' : isActive ? STATUS_STYLES[visualStatus]?.color || STATUS_STYLES[status]?.color || '#395886' : isFail ? STATUS_STYLES[status]?.color || '#991B1B' : '#D1D5DB'
         const lineColor = isDone ? '#395886' : '#E5E7EB'
 
         return (
@@ -269,7 +282,11 @@ export default function MyBookingsPage() {
                   </p>
                 )}
                 {/* #7 — Status timeline */}
-                <StatusTimeline status={booking.status} />
+                <StatusTimeline
+                  status={booking.status}
+                  startTime={booking.startTime}
+                  endTime={booking.endTime}
+                />
               </div>
 
               {/* Right: actions */}

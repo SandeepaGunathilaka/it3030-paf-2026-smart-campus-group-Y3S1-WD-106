@@ -3,12 +3,15 @@ import { useLocation } from 'react-router-dom'
 import CreateBookingPage from './CreateBookingPage'
 import { bookingApi } from '../../api/bookingApi'
 import api from '../../api/axiosConfig'
+import BookingsCalendar from '../../components/Calendar/BookingsCalendar'
 
 const STATUS_STYLES = {
-  PENDING:   { bg: '#FFF8E7', color: '#B45309', border: '#FDE68A' },
-  APPROVED:  { bg: '#F0F3FA', color: '#395886', border: '#B1C9EF' },
-  REJECTED:  { bg: '#FEF2F2', color: '#991B1B', border: '#FECACA' },
-  CANCELLED: { bg: '#F9FAFB', color: '#6B7280', border: '#E5E7EB' },
+  PENDING:   { bg: '#FFF8E7', color: '#B45309',  border: '#FDE68A' },
+  APPROVED:  { bg: '#F0F3FA', color: '#395886',  border: '#B1C9EF' },
+  REJECTED:  { bg: '#FEF2F2', color: '#991B1B',  border: '#FECACA' },
+  CANCELLED: { bg: '#F9FAFB', color: '#6B7280',  border: '#E5E7EB' },
+  IN_USE:    { bg: '#ECFDF5', color: '#065F46',  border: '#6EE7B7' },  // ← add
+  DONE:      { bg: '#F0F3FA', color: '#395886',  border: '#B1C9EF' },  // ← add
 }
 
 // #1 — Per-status accent colors for summary cards
@@ -29,15 +32,26 @@ function formatDateTime(iso) {
 
 // #7 — Status timeline mini-component
 const TIMELINE_STEPS = ['PENDING', 'APPROVED', 'IN USE', 'DONE']
-function StatusTimeline({ status }) {
+function StatusTimeline({ status, startTime, endTime }) {
+  // For APPROVED bookings, compute the visual step from current time
+  const visualStatus = (() => {
+    if (status !== 'APPROVED') return status
+    const now   = new Date()
+    const start = new Date(startTime)
+    const end   = new Date(endTime)
+    if (now >= end)   return 'DONE'
+    if (now >= start) return 'IN_USE'
+    return 'APPROVED'
+  })()
+
   const activeIdx = {
     PENDING:   0,
     APPROVED:  1,
-    CANCELLED: 1, // stays at APPROVED step but won't highlight further
+    CANCELLED: 1,
     REJECTED:  1,
     IN_USE:    2,
     DONE:      3,
-  }[status] ?? 0
+  }[visualStatus] ?? 0
 
   const isFailed = status === 'REJECTED' || status === 'CANCELLED'
 
@@ -47,7 +61,7 @@ function StatusTimeline({ status }) {
         const isActive  = idx === activeIdx && !isFailed
         const isDone    = idx < activeIdx && !isFailed
         const isFail    = isFailed && idx === activeIdx
-        const dotColor  = isDone ? '#395886' : isActive ? STATUS_STYLES[status]?.color || '#395886' : isFail ? STATUS_STYLES[status]?.color || '#991B1B' : '#D1D5DB'
+        const dotColor  = isDone ? '#395886' : isActive ? STATUS_STYLES[visualStatus]?.color || STATUS_STYLES[status]?.color || '#395886' : isFail ? STATUS_STYLES[status]?.color || '#991B1B' : '#D1D5DB'
         const lineColor = isDone ? '#395886' : '#E5E7EB'
 
         return (
@@ -81,6 +95,7 @@ function StatusTimeline({ status }) {
 export default function MyBookingsPage() {
   const location = useLocation()
   const [bookings, setBookings] = useState([])
+  const [selectedDate, setSelectedDate] = useState(null)
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState('')
   const [successMsg, setSuccessMsg] = useState(location.state?.success || '')
@@ -140,7 +155,23 @@ export default function MyBookingsPage() {
     }
   }
 
-  const canCancel = (status) => status === 'PENDING' || status === 'APPROVED'
+  // Determine whether a booking can be cancelled based on its current visual status.
+  // If an APPROVED booking's start time has arrived, it's considered 'IN_USE'
+  // and should no longer be cancellable.
+  const computeVisualStatus = (booking) => {
+    if (booking.status !== 'APPROVED') return booking.status
+    const now = new Date()
+    const start = new Date(booking.startTime)
+    const end = new Date(booking.endTime)
+    if (now >= end) return 'DONE'
+    if (now >= start) return 'IN_USE'
+    return 'APPROVED'
+  }
+
+  const canCancel = (booking) => {
+    const visual = computeVisualStatus(booking)
+    return visual === 'PENDING' || visual === 'APPROVED'
+  }
 
   // Summary counts
   const counts = bookings.reduce((acc, b) => {
@@ -148,23 +179,24 @@ export default function MyBookingsPage() {
     return acc
   }, {})
 
+  const displayedBookings = bookings.filter(b => {
+    if (!selectedDate) return true
+    const dayStart = new Date(selectedDate + 'T00:00:00')
+    const dayEnd = new Date(selectedDate + 'T23:59:59')
+    return new Date(b.startTime) <= dayEnd && new Date(b.endTime) >= dayStart
+  })
+
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Bookings</h1>
           <p className="text-sm text-gray-500 mt-1">Track the status of your booking requests.</p>
         </div>
-        {/* #3 — Brand gradient button */}
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 text-sm font-semibold text-white rounded-xl transition-all hover:shadow-lg hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #4A6FA5, #395886)' }}
-        >
-          + New Booking
-        </button>
       </div>
 
       {/* Summary cards — #1 color-coded per status */}
@@ -223,9 +255,15 @@ export default function MyBookingsPage() {
       )}
 
       {/* Bookings list */}
-      {!loading && bookings.length > 0 && (
+      {!loading && displayedBookings.length > 0 && (
         <div className="space-y-3">
-          {bookings.map(booking => (
+          {selectedDate && (
+            <div className="text-sm text-gray-600 mb-1">
+              Showing bookings for <span className="font-medium">{selectedDate}</span>
+              <button onClick={() => setSelectedDate(null)} className="ml-3 text-xs text-blue-600">Clear</button>
+            </div>
+          )}
+          {displayedBookings.map(booking => (
             // #4 — Left-side status stripe
             <div
               key={booking.id}
@@ -269,7 +307,11 @@ export default function MyBookingsPage() {
                   </p>
                 )}
                 {/* #7 — Status timeline */}
-                <StatusTimeline status={booking.status} />
+                <StatusTimeline
+                  status={booking.status}
+                  startTime={booking.startTime}
+                  endTime={booking.endTime}
+                />
               </div>
 
               {/* Right: actions */}
@@ -277,7 +319,7 @@ export default function MyBookingsPage() {
                 <span className="text-xs text-gray-400">
                   {formatDateTime(booking.createdAt).split(',')[0]}
                 </span>
-                {canCancel(booking.status) && (
+                {canCancel(booking) && (
                   confirmCancelId === booking.id ? (
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-600 font-medium">Are you sure?</span>
@@ -321,6 +363,18 @@ export default function MyBookingsPage() {
           }}
         />
       )}
+        </div>
+        <div className="flex flex-col items-end gap-4">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 text-sm font-semibold text-white rounded-xl transition-all hover:shadow-lg hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #4A6FA5, #395886)' }}
+          >
+            + New Booking
+          </button>
+          <BookingsCalendar bookings={bookings} onDateSelect={(d) => setSelectedDate(d)} />
+        </div>
+      </div>
     </div>
   )
 }

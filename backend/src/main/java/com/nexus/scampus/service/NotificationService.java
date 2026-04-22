@@ -37,7 +37,7 @@ public class NotificationService {
         Optional<NotificationPreference> pref = preferenceRepository
                 .findByUserIdAndCategory(recipient.getId(), category);
         if (pref.isPresent() && !pref.get().getEnabled()) return;
-
+    
         Notification notification = Notification.builder()
                 .recipient(recipient)
                 .type(type)

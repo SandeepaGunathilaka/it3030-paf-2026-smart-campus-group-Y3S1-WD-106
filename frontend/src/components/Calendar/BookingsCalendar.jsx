@@ -36,10 +36,15 @@ function getMonthMatrix(year, month) {
 export default function BookingsCalendar({ bookings = [], onDateSelect }) {
   const today = new Date()
   const [view, setView] = useState({ year: today.getFullYear(), month: today.getMonth() })
+  const [hoveredDate, setHoveredDate] = useState(null)
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
 
+  // Only include PENDING and APPROVED bookings in calendar counts/previews
   const countsByDate = useMemo(() => {
     const map = {}
     bookings.forEach(b => {
+      if (!b || !b.status) return
+      if (!(b.status === 'PENDING' || b.status === 'APPROVED')) return
       const start = new Date(b.startTime)
       const end = new Date(b.endTime)
       // mark each date in the inclusive range
@@ -84,6 +89,9 @@ export default function BookingsCalendar({ bookings = [], onDateSelect }) {
             <button
               key={key}
               onClick={() => onDateSelect && onDateSelect(key)}
+              onMouseEnter={(e) => { setHoveredDate(key); setTooltipPos({ x: e.clientX, y: e.clientY }) }}
+              onMouseMove={(e) => setTooltipPos({ x: e.clientX, y: e.clientY })}
+              onMouseLeave={() => setHoveredDate(null)}
               className={`flex flex-col items-center justify-start p-2 h-14 rounded group transition-colors ${isCurrentMonth ? 'bg-white' : 'bg-gray-50 text-gray-300'}`}
             >
               <div className="w-full flex items-center justify-between">
@@ -108,6 +116,41 @@ export default function BookingsCalendar({ bookings = [], onDateSelect }) {
           <div className="w-2 h-2 rounded-full bg-blue-600" />
           <span>Booked day</span>
         </div>
+      </div>
+      <CalendarTooltip dateKey={hoveredDate} bookings={bookings} pos={tooltipPos} />
+    </div>
+  )
+}
+
+// Tooltip rendered separately to avoid overflow clipping
+function CalendarTooltip({ dateKey, bookings, pos }) {
+  if (!dateKey) return null
+  const list = bookings.filter(b => (b.status === 'PENDING' || b.status === 'APPROVED') && (() => {
+    const start = new Date(b.startTime)
+    const end = new Date(b.endTime)
+    const d = new Date(dateKey + 'T00:00:00')
+    return start <= new Date(dateKey + 'T23:59:59') && end >= d
+  })())
+
+  if (list.length === 0) return null
+
+  const items = list.slice(0, 5)
+
+  return (
+    <div style={{ position: 'fixed', left: pos.x + 12, top: pos.y + 12, zIndex: 9999 }}>
+      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-64 text-xs">
+        <div className="font-medium mb-1">Bookings on {dateKey}</div>
+        <div className="divide-y divide-gray-100 max-h-44 overflow-auto">
+          {items.map(b => (
+            <div key={b.id} className="py-1">
+              <div className="text-gray-800 font-medium">{b.purpose || `Resource #${b.resourceId}`}</div>
+              <div className="text-gray-500">{new Date(b.startTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} — {new Date(b.endTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} • {b.status}</div>
+            </div>
+          ))}
+        </div>
+        {list.length > items.length && (
+          <div className="text-center text-gray-400 mt-2">and {list.length - items.length} more…</div>
+        )}
       </div>
     </div>
   )

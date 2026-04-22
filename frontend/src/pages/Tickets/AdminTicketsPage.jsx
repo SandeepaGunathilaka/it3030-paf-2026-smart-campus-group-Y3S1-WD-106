@@ -91,6 +91,25 @@ export default function AdminTicketsPage() {
         </div>
       )}
 
+      {/* Summary stats */}
+      {!loading && (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
+          {[
+            { label: 'Total', value: tickets.length, color: '#395886', bg: '#D5DEEF' },
+            { label: 'Open', value: tickets.filter(t => t.status === 'OPEN').length, color: '#638ECB', bg: '#F0F3FA' },
+            { label: 'In Progress', value: tickets.filter(t => t.status === 'IN_PROGRESS').length, color: '#D97706', bg: '#FEF3C7' },
+            { label: 'Resolved', value: tickets.filter(t => t.status === 'RESOLVED').length, color: '#16A34A', bg: '#F0FDF4' },
+            { label: 'Closed / Rejected', value: tickets.filter(t => t.status === 'CLOSED' || t.status === 'REJECTED').length, color: '#64748B', bg: '#F1F5F9' },
+          ].map(stat => (
+            <div key={stat.label} className="bg-white rounded-xl p-4 text-center"
+              style={{ border: '1.5px solid #D5DEEF' }}>
+              <p className="text-2xl font-extrabold" style={{ color: stat.color }}>{stat.value}</p>
+              <p className="text-xs font-medium mt-1" style={{ color: '#64748B' }}>{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-white rounded-xl p-4 mb-6 flex flex-wrap gap-4"
         style={{ border: '1.5px solid #D5DEEF' }}>
@@ -165,15 +184,15 @@ export default function AdminTicketsPage() {
         <div className="bg-white rounded-xl overflow-hidden" style={{ border: '1.5px solid #D5DEEF' }}>
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ background: '#F0F3FA', borderBottom: '1.5px solid #D5DEEF' }}>
-                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: '#64748B' }}>ID</th>
-                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: '#64748B' }}>Title</th>
-                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: '#64748B' }}>Status</th>
-                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: '#64748B' }}>Priority</th>
-                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: '#64748B' }}>Reporter</th>
-                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: '#64748B' }}>Assigned To</th>
-                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: '#64748B' }}>Date</th>
-                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: '#64748B' }}>Actions</th>
+              <tr style={{ background: 'linear-gradient(135deg, #4A6FA5 0%, #395886 100%)' }}>
+                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.85)' }}>ID</th>
+                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.85)' }}>Title</th>
+                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.85)' }}>Status</th>
+                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.85)' }}>Priority</th>
+                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.85)' }}>Reporter</th>
+                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.85)' }}>Assigned To</th>
+                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.85)' }}>Date</th>
+                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.85)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>

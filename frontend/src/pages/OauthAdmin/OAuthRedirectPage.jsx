@@ -2,12 +2,13 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
-
+//This page is the redirect URI for OAuth2 login. It extracts the token from the URL, logs the user in, and redirects to the dashboard.
 export default function OAuthRedirectPage() {
   const [searchParams] = useSearchParams()
   const { login } = useAuth()
   const navigate = useNavigate()
 
+  //On page load, check for token in URL and log the user in
   useEffect(() => {
     const token = searchParams.get('token')
     if (token) {
@@ -19,14 +20,6 @@ export default function OAuthRedirectPage() {
       navigate('/login', { replace: true })
     }
   }, [])
-
-  //start new
-  // useEffect(() => {
-  //   if (!loading && user) {
-  //     navigate('/dashboard', { replace: true })
-  //   }
-  // }, [user, loading])  
-//end new
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-blue-700">

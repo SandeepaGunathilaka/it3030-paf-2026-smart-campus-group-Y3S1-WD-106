@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+// DTO for creating a new staff member, containing fields for Google ID, email, name, picture URL, and role (ADMIN or TECHNICIAN).
 public record CreateStaffRequest(
         String googleId,
         @NotBlank(message = "Email is required") @Email(message = "Invalid email") String email,

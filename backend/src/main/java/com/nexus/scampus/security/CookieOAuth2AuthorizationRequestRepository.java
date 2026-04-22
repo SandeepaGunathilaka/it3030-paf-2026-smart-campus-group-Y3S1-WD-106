@@ -15,9 +15,12 @@ import java.util.Optional;
 public class CookieOAuth2AuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
+    //Handles storing and retrieving OAuth2 authorization requests in cookies during the login flow
+    //tempoprary storage for the auth request between the initial login and the callback from google and it redirect to my app
     private static final String COOKIE_NAME = "oauth2_auth_request";
     private static final int COOKIE_EXPIRE_SECONDS = 180;
 
+    //Load the authorization request from the cookie when the user is redirected back from the OAuth2 provider
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
         return getCookie(request, COOKIE_NAME)
@@ -25,6 +28,7 @@ public class CookieOAuth2AuthorizationRequestRepository
                 .orElse(null);
     }
 
+    //Save the authorization request in a cookie before redirecting to the OAuth2 provider
     @Override
     public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest,
                                          HttpServletRequest request,
@@ -40,6 +44,7 @@ public class CookieOAuth2AuthorizationRequestRepository
         response.addCookie(cookie);
     }
 
+    //Remove the authorization request from the cookie after it's used
     @Override
     public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,
                                                                   HttpServletResponse response) {
@@ -48,6 +53,7 @@ public class CookieOAuth2AuthorizationRequestRepository
         return req;
     }
 
+    //Helper methods for cookie handling and serialization
     private Optional<Cookie> getCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -58,6 +64,7 @@ public class CookieOAuth2AuthorizationRequestRepository
         return Optional.empty();
     }
 
+    //Deletes a cookie by setting its value to empty and max age to 0
     private void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -71,11 +78,12 @@ public class CookieOAuth2AuthorizationRequestRepository
             }
         }
     }
-
+    //Serializes an object to a Base64 string for storing in a cookie
     private String serialize(Object object) {
         return Base64.getUrlEncoder().encodeToString(SerializationUtils.serialize(object));
     }
 
+    //Deserializes a Base64 string from a cookie back into an object
     @SuppressWarnings("unchecked")
     private <T> T deserialize(String value) {
         return (T) SerializationUtils.deserialize(Base64.getUrlDecoder().decode(value));

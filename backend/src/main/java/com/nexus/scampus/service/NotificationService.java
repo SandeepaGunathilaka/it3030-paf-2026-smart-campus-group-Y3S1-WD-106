@@ -2,23 +2,42 @@ package com.nexus.scampus.service;
 
 import com.nexus.scampus.dto.response.NotificationResponse;
 import com.nexus.scampus.model.Notification;
+import com.nexus.scampus.model.NotificationPreference;
 import com.nexus.scampus.model.User;
 import com.nexus.scampus.model.enums.NotificationType;
+import com.nexus.scampus.repository.NotificationPreferenceRepository;
 import com.nexus.scampus.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationPreferenceRepository preferenceRepository;
 
+    // Maps a NotificationType to its preference category
+    private String categoryFor(NotificationType type) {
+        return switch (type) {
+            case BOOKING_APPROVED, BOOKING_REJECTED, BOOKING_CANCELLED -> "BOOKING";
+            case TICKET_STATUS_CHANGED, TICKET_COMMENT_ADDED, TICKET_ASSIGNED -> "TICKET";
+            case ACCOUNT_APPROVED, ACCOUNT_REJECTED -> "ACCOUNT";
+        };
+    }
+
+    // Checks preference before saving — defaults to enabled if no preference row exists
     public void send(User recipient, NotificationType type, String title, String message,
                      Long referenceId, String referenceType) {
+        String category = categoryFor(type);
+        Optional<NotificationPreference> pref = preferenceRepository
+                .findByUserIdAndCategory(recipient.getId(), category);
+        if (pref.isPresent() && !pref.get().getEnabled()) return;
+
         Notification notification = Notification.builder()
                 .recipient(recipient)
                 .type(type)

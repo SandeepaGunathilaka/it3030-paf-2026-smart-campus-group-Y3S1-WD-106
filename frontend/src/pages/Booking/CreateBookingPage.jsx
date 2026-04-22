@@ -18,8 +18,14 @@ export default function CreateBookingPage({ onClose, onSuccess, prefillResourceI
     setError('')
   }
 
-  const toISO = (localDateTimeStr) =>
-    localDateTimeStr ? new Date(localDateTimeStr).toISOString() : null
+  // Send the local time string directly to the backend (no UTC conversion).
+  // The backend uses LocalDateTime which has no timezone — converting to UTC
+  // via toISOString() causes a timezone shift that makes the stored time wrong.
+  // datetime-local gives "YYYY-MM-DDTHH:mm" — we just pad seconds and send as-is.
+  const toLocalISO = (localDateTimeStr) => {
+    if (!localDateTimeStr) return null
+    return localDateTimeStr.length === 16 ? localDateTimeStr + ':00' : localDateTimeStr
+  }
 
   // Live duration label
   const duration = (() => {
@@ -52,8 +58,8 @@ export default function CreateBookingPage({ onClose, onSuccess, prefillResourceI
     try {
       await bookingApi.createBooking({
         resourceId:        Number(form.resourceId),
-        startTime:         toISO(form.startTime),
-        endTime:           toISO(form.endTime),
+        startTime:         toLocalISO(form.startTime),
+        endTime:           toLocalISO(form.endTime),
         purpose:           form.purpose,
         expectedAttendees: form.expectedAttendees ? Number(form.expectedAttendees) : null,
       })

@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ticketApi } from '../../api/ticketApi'
+import { adminApi } from '../../api/adminApi'
 import { useAuth } from '../../context/AuthContext'
 import StatusBadge from '../../components/StatusBadge'
 
-const STATUSES = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REJECTED']
+const PROGRESS_STEPS = [
+  { key: 'OPEN', label: 'Submitted' },
+  { key: 'IN_PROGRESS', label: 'In Progress' },
+  { key: 'RESOLVED', label: 'Resolved' },
+  { key: 'CLOSED', label: 'Closed' },
+]
 
 export default function TicketDetailPage() {
   const { id } = useParams()
@@ -18,17 +24,28 @@ export default function TicketDetailPage() {
   const [commentLoading, setCommentLoading] = useState(false)
   const [editingCommentId, setEditingCommentId] = useState(null)
   const [editContent, setEditContent] = useState('')
-  const [statusUpdate, setStatusUpdate] = useState({ status: '', resolutionNotes: '', rejectionReason: '' })
+  const [pendingAction, setPendingAction] = useState(null)
+  const [actionNote, setActionNote] = useState('')
   const [statusLoading, setStatusLoading] = useState(false)
-  const [showStatusForm, setShowStatusForm] = useState(false)
+  const [technicians, setTechnicians] = useState([])
+  const [selectedTech, setSelectedTech] = useState('')
+  const [showAssign, setShowAssign] = useState(false)
+  const [assignLoading, setAssignLoading] = useState(false)
 
   useEffect(() => { fetchTicket() }, [id])
+
+  useEffect(() => {
+    if (isAdmin) {
+      adminApi.getUsers()
+        .then(users => setTechnicians(users.filter(u => u.role === 'TECHNICIAN')))
+        .catch(() => {})
+    }
+  }, [isAdmin])
 
   const fetchTicket = async () => {
     try {
       const data = await ticketApi.getTicketById(id)
       setTicket(data)
-      setStatusUpdate(prev => ({ ...prev, status: data.status }))
     } catch (err) {
       setError('Failed to load ticket.')
     } finally {
@@ -76,21 +93,55 @@ export default function TicketDetailPage() {
     }
   }
 
-  const handleStatusUpdate = async () => {
+  const handleStatusUpdate = async (targetStatus) => {
     setStatusLoading(true)
     try {
       await ticketApi.updateTicketStatus(id, {
-        status: statusUpdate.status,
-        resolutionNotes: statusUpdate.resolutionNotes || null,
-        rejectionReason: statusUpdate.rejectionReason || null,
+        status: targetStatus,
+        resolutionNotes: targetStatus === 'RESOLVED' ? actionNote || null : null,
+        rejectionReason: targetStatus === 'REJECTED' ? actionNote || null : null,
       })
-      setShowStatusForm(false)
+      setPendingAction(null)
+      setActionNote('')
       fetchTicket()
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update status.')
     } finally {
       setStatusLoading(false)
     }
+  }
+
+  const handleAssign = async () => {
+    if (!selectedTech) return
+    setAssignLoading(true)
+    try {
+      await ticketApi.assignTechnician(id, Number(selectedTech))
+      setShowAssign(false)
+      setSelectedTech('')
+      fetchTicket()
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to assign technician.')
+    } finally {
+      setAssignLoading(false)
+    }
+  }
+
+  const getAdminActions = (status) => {
+    if (status === 'OPEN') return [
+      { to: 'IN_PROGRESS', label: 'Accept Ticket', style: { background: 'linear-gradient(135deg,#16A34A,#15803D)', color: '#fff' }, noteLabel: null },
+      { to: 'REJECTED',    label: 'Reject Ticket', style: { background: 'linear-gradient(135deg,#DC2626,#B91C1C)', color: '#fff' }, noteLabel: 'Rejection reason (optional)' },
+    ]
+    if (status === 'RESOLVED') return [
+      { to: 'CLOSED', label: 'Close Ticket', style: { background: 'linear-gradient(135deg,#4A6FA5,#395886)', color: '#fff' }, noteLabel: null },
+    ]
+    return []
+  }
+
+  const getTechnicianActions = (status) => {
+    if (status === 'IN_PROGRESS') return [
+      { to: 'RESOLVED', label: 'Mark as Resolved', style: { background: 'linear-gradient(135deg,#16A34A,#15803D)', color: '#fff' }, noteLabel: 'Resolution notes (optional)' },
+    ]
+    return []
   }
 
   if (loading) return (
@@ -105,7 +156,10 @@ export default function TicketDetailPage() {
     </div>
   )
 
-  const canUpdateStatus = isAdmin || (isTechnician && ticket?.assignedToId === user?.id)
+  const isAssignedTech = isTechnician && ticket?.assignedToId === user?.id
+  const adminActions = isAdmin ? getAdminActions(ticket?.status) : []
+  const techActions = isAssignedTech ? getTechnicianActions(ticket?.status) : []
+  const allActions = [...adminActions, ...techActions]
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
@@ -139,74 +193,159 @@ export default function TicketDetailPage() {
             </div>
             <h1 className="text-xl font-bold" style={{ color: '#0F172A' }}>{ticket.title}</h1>
           </div>
-          {canUpdateStatus && (
-            <button
-              onClick={() => setShowStatusForm(!showStatusForm)}
-              className="px-3 py-1.5 text-xs font-bold text-white rounded-lg flex-shrink-0"
-              style={{ background: '#638ECB' }}
-            >
-              Update Status
-            </button>
-          )}
         </div>
 
-        {/* Status update form */}
-        {showStatusForm && canUpdateStatus && (
-          <div className="mb-4 p-4 rounded-lg space-y-3" style={{ background: '#F0F3FA', border: '1.5px solid #D5DEEF' }}>
+        {/* Progress tracker — regular users only */}
+        {!isAdmin && !isTechnician && ticket.status !== 'REJECTED' && (
+          <div className="mb-5 px-1">
+            <div className="flex items-center">
+              {PROGRESS_STEPS.map((step, i) => {
+                const stepIdx = PROGRESS_STEPS.findIndex(s => s.key === ticket.status)
+                const done = i < stepIdx
+                const active = i === stepIdx
+                return (
+                  <div key={step.key} className="flex items-center flex-1 last:flex-none">
+                    <div className="flex flex-col items-center gap-1">
+                      <div
+                        className="w-2.5 h-2.5 rounded-full transition-all"
+                        style={{
+                          background: active ? '#395886' : done ? '#638ECB' : '#CBD5E1',
+                          boxShadow: active ? '0 0 0 3px rgba(57,88,134,0.18)' : 'none',
+                        }}
+                      />
+                      <span className="text-xs whitespace-nowrap" style={{ color: active ? '#395886' : done ? '#638ECB' : '#94A3B8', fontWeight: active ? 600 : 400 }}>
+                        {step.label}
+                      </span>
+                    </div>
+                    {i < PROGRESS_STEPS.length - 1 && (
+                      <div className="flex-1 h-px mx-2 mb-4" style={{ background: done ? '#638ECB' : '#E2E8F0' }} />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Rejected notice — regular users */}
+        {!isAdmin && !isTechnician && ticket.status === 'REJECTED' && (
+          <div className="mb-5 rounded-lg px-4 py-3 flex items-center gap-3" style={{ background: '#FFF1F2', border: '1px solid #FECDD3' }}>
+            <div className="w-1.5 h-8 rounded-full flex-shrink-0" style={{ background: '#E11D48' }} />
             <div>
-              <label className="block text-xs font-bold mb-1" style={{ color: '#374151' }}>New Status</label>
-              <select
-                value={statusUpdate.status}
-                onChange={e => setStatusUpdate(prev => ({ ...prev, status: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none"
-                style={{ borderColor: '#D5DEEF' }}
-              >
-                {STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
-              </select>
+              <p className="text-sm font-semibold" style={{ color: '#BE123C' }}>Ticket Rejected</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9F1239' }}>
+                {ticket.rejectionReason || 'This ticket was not accepted.'}
+              </p>
             </div>
-            {statusUpdate.status === 'RESOLVED' && (
-              <div>
-                <label className="block text-xs font-bold mb-1" style={{ color: '#374151' }}>Resolution Notes</label>
-                <textarea
-                  value={statusUpdate.resolutionNotes}
-                  onChange={e => setStatusUpdate(prev => ({ ...prev, resolutionNotes: e.target.value }))}
-                  rows={3}
-                  placeholder="Describe how the issue was resolved..."
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none"
-                  style={{ borderColor: '#D5DEEF' }}
-                />
+          </div>
+        )}
+
+        {/* Assign technician — admin only */}
+        {isAdmin && ticket.status !== 'CLOSED' && ticket.status !== 'REJECTED' && (
+          <div className="mb-4">
+            {!showAssign ? (
+              <div className="flex items-center gap-3">
+                <span className="text-xs" style={{ color: '#64748B' }}>
+                  {ticket.assignedToName
+                    ? <>Assigned to <span className="font-semibold" style={{ color: '#395886' }}>{ticket.assignedToName}</span></>
+                    : <span style={{ color: '#94A3B8' }}>No technician assigned</span>
+                  }
+                </span>
+                <button
+                  onClick={() => { setShowAssign(true); setSelectedTech('') }}
+                  className="px-3 py-1 text-xs font-bold rounded-lg border transition-colors hover:opacity-80"
+                  style={{ borderColor: '#D5DEEF', color: '#395886', background: '#F0F3FA' }}
+                >
+                  {ticket.assignedToName ? 'Reassign' : 'Assign Technician'}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 flex-wrap">
+                <select
+                  value={selectedTech}
+                  onChange={e => setSelectedTech(e.target.value)}
+                  className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none"
+                  style={{ borderColor: '#D5DEEF', color: '#374151' }}
+                >
+                  <option value="">Select technician…</option>
+                  {technicians.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleAssign}
+                  disabled={assignLoading || !selectedTech}
+                  className="px-3 py-1.5 text-xs font-bold text-white rounded-lg disabled:opacity-50 transition-all hover:opacity-90"
+                  style={{ background: 'linear-gradient(135deg,#4A6FA5,#395886)' }}
+                >
+                  {assignLoading ? 'Assigning…' : 'Confirm'}
+                </button>
+                <button
+                  onClick={() => setShowAssign(false)}
+                  className="px-3 py-1.5 text-xs font-bold rounded-lg border"
+                  style={{ borderColor: '#D5DEEF', color: '#374151' }}
+                >
+                  Cancel
+                </button>
               </div>
             )}
-            {statusUpdate.status === 'REJECTED' && (
-              <div>
-                <label className="block text-xs font-bold mb-1" style={{ color: '#374151' }}>Rejection Reason</label>
-                <textarea
-                  value={statusUpdate.rejectionReason}
-                  onChange={e => setStatusUpdate(prev => ({ ...prev, rejectionReason: e.target.value }))}
-                  rows={3}
-                  placeholder="Explain why this ticket is being rejected..."
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none"
-                  style={{ borderColor: '#D5DEEF' }}
-                />
+          </div>
+        )}
+
+        {/* Action buttons — admin / technician */}
+        {allActions.length > 0 && (
+          <div className="mb-5 space-y-3">
+            <div className="flex flex-wrap gap-3">
+              {allActions.map(action => (
+                <button
+                  key={action.to}
+                  onClick={() => { setPendingAction(action.to); setActionNote('') }}
+                  className="px-4 py-2 text-sm font-bold rounded-xl transition-all hover:shadow-lg hover:opacity-90 disabled:opacity-50"
+                  style={action.style}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+
+            {pendingAction && (
+              <div className="rounded-xl p-4 space-y-3" style={{ background: '#F8FAFC', border: '1.5px solid #D5DEEF' }}>
+                <p className="text-sm font-bold" style={{ color: '#0F172A' }}>
+                  Confirm: {allActions.find(a => a.to === pendingAction)?.label}
+                </p>
+                {allActions.find(a => a.to === pendingAction)?.noteLabel && (
+                  <div>
+                    <label className="block text-xs font-bold mb-1" style={{ color: '#374151' }}>
+                      {allActions.find(a => a.to === pendingAction).noteLabel}
+                    </label>
+                    <textarea
+                      value={actionNote}
+                      onChange={e => setActionNote(e.target.value)}
+                      rows={3}
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none resize-none"
+                      style={{ borderColor: '#D5DEEF' }}
+                    />
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleStatusUpdate(pendingAction)}
+                    disabled={statusLoading}
+                    className="px-4 py-2 text-xs font-bold text-white rounded-lg disabled:opacity-50"
+                    style={allActions.find(a => a.to === pendingAction)?.style}
+                  >
+                    {statusLoading ? 'Saving…' : 'Confirm'}
+                  </button>
+                  <button
+                    onClick={() => { setPendingAction(null); setActionNote('') }}
+                    className="px-4 py-2 text-xs font-bold rounded-lg border"
+                    style={{ borderColor: '#D5DEEF', color: '#374151' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             )}
-            <div className="flex gap-2">
-              <button
-                onClick={handleStatusUpdate}
-                disabled={statusLoading}
-                className="px-4 py-2 text-xs font-bold text-white rounded-lg disabled:opacity-50"
-                style={{ background: '#395886' }}
-              >
-                {statusLoading ? 'Saving...' : 'Save Status'}
-              </button>
-              <button
-                onClick={() => setShowStatusForm(false)}
-                className="px-4 py-2 text-xs font-bold rounded-lg border"
-                style={{ borderColor: '#D5DEEF', color: '#374151' }}
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         )}
 

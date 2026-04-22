@@ -21,7 +21,11 @@ export default function CreateTicketPage() {
   const [error, setError] = useState('')
 
   const handleChange = (e) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    if (name === 'resourceId') {
+      if (value !== '' && (!/^\d+$/.test(value) || value.length > 4)) return
+    }
+    setForm(prev => ({ ...prev, [name]: value }))
     setError('')
   }
 
@@ -41,6 +45,10 @@ export default function CreateTicketPage() {
 
     if (!form.title || !form.description || !form.category || !form.priority || !form.location) {
       setError('Please fill in all required fields.')
+      return
+    }
+    if (form.resourceId && (!/^\d+$/.test(form.resourceId) || form.resourceId.length < 3 || form.resourceId.length > 4)) {
+      setError('Resource ID must be a 3–4 digit number.')
       return
     }
 
@@ -82,8 +90,19 @@ export default function CreateTicketPage() {
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
 
-      {/* Header */}
-      <div className="mb-6">
+      {/* Gradient header */}
+      <div
+        className="px-6 py-5 rounded-t-2xl hidden sm:block"
+        style={{ background: 'linear-gradient(135deg, #4A6FA5 0%, #395886 100%)' }}
+      >
+        <h1 className="text-xl font-bold text-white">Report an Incident</h1>
+        <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>
+          Fill in the details below. Your ticket will be reviewed and assigned to a technician.
+        </p>
+      </div>
+
+      {/* Mobile header */}
+      <div className="sm:hidden mb-5">
         <h1 className="text-2xl font-bold" style={{ color: '#0F172A' }}>Report an Incident</h1>
         <p className="text-sm mt-1" style={{ color: '#64748B' }}>
           Fill in the details below. Your ticket will be reviewed and assigned to a technician.
@@ -91,20 +110,23 @@ export default function CreateTicketPage() {
       </div>
 
       {/* Form card */}
-      <div className="bg-white rounded-xl p-6" style={{ border: '1.5px solid #D5DEEF', boxShadow: '0 4px 24px rgba(57,88,134,0.08)' }}>
+      <div className="bg-white rounded-b-2xl sm:rounded-t-none rounded-2xl shadow-xl p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Error banner */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+            <div
+              className="rounded-xl px-4 py-3 text-sm"
+              style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B' }}
+            >
               {error}
             </div>
           )}
 
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: '#374151' }}>
-              Title <span className="text-red-500">*</span>
+            <label className="label">
+              Title <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <input
               type="text"
@@ -112,16 +134,15 @@ export default function CreateTicketPage() {
               value={form.title}
               onChange={handleChange}
               placeholder="e.g. Broken projector in Lab 304"
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              style={{ borderColor: '#D5DEEF', focusRingColor: '#638ECB' }}
+              className="input"
               required
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: '#374151' }}>
-              Description <span className="text-red-500">*</span>
+            <label className="label">
+              Description <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <textarea
               name="description"
@@ -129,8 +150,7 @@ export default function CreateTicketPage() {
               onChange={handleChange}
               rows={4}
               placeholder="Describe the issue in detail..."
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-none"
-              style={{ borderColor: '#D5DEEF' }}
+              className="input resize-none"
               required
             />
           </div>
@@ -138,15 +158,14 @@ export default function CreateTicketPage() {
           {/* Category & Priority */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: '#374151' }}>
-                Category <span className="text-red-500">*</span>
+              <label className="label">
+                Category <span style={{ color: '#EF4444' }}>*</span>
               </label>
               <select
                 name="category"
                 value={form.category}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-                style={{ borderColor: '#D5DEEF' }}
+                className="input"
                 required
               >
                 <option value="">Select category</option>
@@ -156,15 +175,14 @@ export default function CreateTicketPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: '#374151' }}>
-                Priority <span className="text-red-500">*</span>
+              <label className="label">
+                Priority <span style={{ color: '#EF4444' }}>*</span>
               </label>
               <select
                 name="priority"
                 value={form.priority}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-                style={{ borderColor: '#D5DEEF' }}
+                className="input"
                 required
               >
                 <option value="">Select priority</option>
@@ -177,8 +195,8 @@ export default function CreateTicketPage() {
 
           {/* Location */}
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: '#374151' }}>
-              Location <span className="text-red-500">*</span>
+            <label className="label">
+              Location <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <input
               type="text"
@@ -186,50 +204,43 @@ export default function CreateTicketPage() {
               value={form.location}
               onChange={handleChange}
               placeholder="e.g. Lab 304, Block A"
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              style={{ borderColor: '#D5DEEF' }}
+              className="input"
               required
             />
           </div>
 
           {/* Contact Details */}
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: '#374151' }}>
-              Contact Details
-            </label>
+            <label className="label">Contact Details</label>
             <input
               type="text"
               name="contactDetails"
               value={form.contactDetails}
               onChange={handleChange}
-              placeholder="e.g. Phone number or email (optional)"
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              style={{ borderColor: '#D5DEEF' }}
+              placeholder="Email or phone number"
+              className="input"
             />
           </div>
 
           {/* Resource ID */}
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: '#374151' }}>
-              Resource ID (optional)
-            </label>
+            <label className="label">Resource ID</label>
             <input
-              type="number"
+              type="text"
               name="resourceId"
               value={form.resourceId}
               onChange={handleChange}
-              placeholder="Link to a specific resource (optional)"
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              style={{ borderColor: '#D5DEEF' }}
+              placeholder="Enter resource ID (optional)"
+              maxLength={4}
+              className="input"
             />
+            <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>Must be a 3–4 digit number</p>
           </div>
 
           {/* Image Attachments */}
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: '#374151' }}>
-              Attachments (max 3 images)
-            </label>
-            <div className="border-2 border-dashed rounded-lg p-4 text-center" style={{ borderColor: '#D5DEEF' }}>
+            <label className="label">Attachments (max 3 images)</label>
+            <div className="border-2 border-dashed rounded-xl p-4 text-center" style={{ borderColor: '#D5DEEF' }}>
               <input
                 type="file"
                 accept="image/*"
@@ -259,20 +270,22 @@ export default function CreateTicketPage() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div
+            className="flex items-center justify-end gap-3 pt-4 mt-2"
+            style={{ borderTop: '1px solid #F0F3FA' }}
+          >
             <button
               type="button"
               onClick={() => navigate('/tickets/my')}
-              className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-              style={{ borderColor: '#D5DEEF', color: '#374151' }}
+              className="btn-secondary px-4 py-2 text-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 text-sm font-bold text-white rounded-lg transition-colors disabled:opacity-50"
-              style={{ background: '#395886' }}
+              className="px-5 py-2 text-sm font-bold text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #4A6FA5, #395886)' }}
             >
               {loading ? 'Submitting...' : 'Submit Ticket'}
             </button>
